@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Кликер</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--tg-theme-bg-color, #f0f2f5);
+            color: var(--tg-theme-text-color, #000000);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .stats {
+            background: var(--tg-theme-secondary-bg-color, #ffffff);
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 16px;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            color: var(--tg-theme-button-color, #40a7e3);
+        }
+        
+        .energy-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .energy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            transition: width 0.3s ease;
+        }
+        
+        .clicker-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .click-button {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #ffd700, #ff8c00);
+            border: none;
+            cursor: pointer;
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .click-button:active {
+            transform: scale(0.95);
+        }
+        
+        .click-button.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        .menu {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .menu-button {
+            background: var(--tg-theme-button-color, #40a7e3);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        
+        .menu-button:active {
+            opacity: 0.8;
+        }
+        
+        .level-up {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            animation: slideDown 0.5s ease, fadeOut 2s ease forwards 1s;
+            z-index: 1000;
+        }
+        
+        @keyframes slideDown {
+            from { transform: translateX(-50%) translateY(-100px); }
+            to { transform: translateX(-50%) translateY(0); }
+        }
+        
+        @keyframes fadeOut {
+            to { opacity: 0; }
+        }
+        
+        .leaderboard {
+            background: var(--tg-theme-secondary-bg-color, #ffffff);
+            border-radius: 16px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        h2 {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 КЛИКЕР</h1>
+        </div>
+        
+        <div class="stats" id="stats-section">
+            <div class="stat-row">
+                <span>👆 Клики:</span>
+                <span class="stat-value" id="clicks">0</span>
+            </div>
+            <div class="stat-row">
+                <span>⚡ Энергия:</span>
+                <span class="stat-value" id="energy">100/100</span>
+            </div>
+            <div class="energy-bar">
+                <div class="energy-fill" id="energy-bar" style="width: 100%"></div>
+            </div>
+            <div class="stat-row">
+                <span>📊 Уровень:</span>
+                <span class="stat-value" id="level">1</span>
+            </div>
+        </div>
+        
+        <div class="clicker-area" id="clicker-section">
+            <button class="click-button" id="click-btn" onclick="handleClick()">
+                👆<br>КЛИК
+            </button>
+        </div>
+        
+        <div class="menu" id="menu-section">
+            <button class="menu-button" onclick="showLeaderboard()">
+                🏆 Топ игроков
+            </button>
+            <button class="menu-button" onclick="refreshStats()">
+                🔄 Обновить
+            </button>
+        </div>
+        
+        <div id="leaderboard-section" class="hidden">
+            <h2>🏆 Топ игроков</h2>
+            <div id="leaderboard-list" class="leaderboard"></div>
+            <button class="menu-button" onclick="hideLeaderboard()" style="margin-top: 15px;">Назад</button>
+        </div>
+    </div>
+    
+    <div id="level-up-message" class="level-up hidden">🌟 УРОВЕНЬ ПОВЫШЕН!</div>
+    
+    <script>
+        let tg = window.Telegram.WebApp;
+        let userId = new URLSearchParams(window.location.search).get('user_id') || 
+                    new URLSearchParams(window.location.search).get('start');
+        
+        // Инициализация WebApp
+        tg.ready();
+        tg.expand();
+        tg.MainButton.hide();
+        
+        // Функция отправки данных в бот
+        function sendToBot(data) {
+            tg.sendData(JSON.stringify(data));
+        }
+        
+        // Обработка клика
+        function handleClick() {
+            const btn = document.getElementById('click-btn');
+            if (btn.classList.contains('disabled')) return;
+            
+            btn.classList.add('disabled');
+            
+            sendToBot({
+                action: 'click',
+                user_id: userId
+            });
+            
+            setTimeout(() => {
+                btn.classList.remove('disabled');
+            }, 300);
+        }
+        
+        // Обновление статистики
+        function updateStats(data) {
+            document.getElementById('clicks').textContent = data.clicks;
+            document.getElementById('energy').textContent = data.energy + '/' + data.max_energy;
+            document.getElementById('level').textContent = data.level;
+            
+            const energyPercent = (data.energy / data.max_energy) * 100;
+            document.getElementById('energy-bar').style.width = energyPercent + '%';
+            
+            if (data.energy <= 0) {
+                document.getElementById('click-btn').classList.add('disabled');
+            } else {
+                document.getElementById('click-btn').classList.remove('disabled');
+            }
+        }
+        
+        // Показ уведомления о повышении уровня
+        function showLevelUp() {
+            const msg = document.getElementById('level-up-message');
+            msg.classList.remove('hidden');
+            setTimeout(() => {
+                msg.classList.add('hidden');
+            }, 3000);
+        }
+        
+        // Показ топа игроков
+        function showLeaderboard() {
+            document.getElementById('stats-section').classList.add('hidden');
+            document.getElementById('clicker-section').classList.add('hidden');
+            document.getElementById('menu-section').classList.add('hidden');
+            document.getElementById('leaderboard-section').classList.remove('hidden');
+            
+            sendToBot({
+                action: 'get_leaderboard',
+                user_id: userId
+            });
+        }
+        
+        // Скрытие топа
+        function hideLeaderboard() {
+            document.getElementById('stats-section').classList.remove('hidden');
+            document.getElementById('clicker-section').classList.remove('hidden');
+            document.getElementById('menu-section').classList.remove('hidden');
+            document.getElementById('leaderboard-section').classList.add('hidden');
+        }
+        
+        // Обновление статистики
+        function refreshStats() {
+            sendToBot({
+                action: 'get_stats',
+                user_id: userId
+            });
+        }
+        
+        // Обработка данных от бота
+        window.addEventListener('message', function(event) {
+            // Для совместимости с Telegram WebApp
+        });
+        
+        // Перехватываем данные от бота
+        tg.onEvent('webAppData', function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                
+                if (data.success) {
+                    if (data.clicks !== undefined) {
+                        updateStats(data);
+                    }
+                    
+                    if (data.level_up) {
+                        showLevelUp();
+                    }
+                    
+                    if (data.leaderboard) {
+                        const list = document.getElementById('leaderboard-list');
+                        list.innerHTML = '';
+                        data.leaderboard.forEach(item => {
+                            const div = document.createElement('div');
+                            div.className = 'leaderboard-item';
+                            div.innerHTML = `
+                                <span>${item.rank}. ${item.name}</span>
+                                <strong>${item.clicks} 👆</strong>
+                            `;
+                            list.appendChild(div);
+                        });
+                    }
+                } else {
+                    tg.showAlert(data.message);
+                }
+            } catch (e) {
+                console.error('Error parsing data:', e);
+            }
+        });
+        
+        // Запрашиваем статистику при загрузке
+        setTimeout(refreshStats, 500);
+        
+        // Автоматическое обновление каждые 30 секунд
+        setInterval(refreshStats, 30000);
+        
+        // Обработка закрытия
+        window.addEventListener('beforeunload', function() {
+            tg.close();
+        });
+    </script>
+</body>
+</html>
