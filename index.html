@@ -129,6 +129,15 @@
             padding: 10px;
             border-bottom: 1px solid #eee;
         }
+        
+        .debug {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            margin-top: 20px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -170,11 +179,31 @@
             <div class="leaderboard" id="leaderboard-list"></div>
             <button class="menu-button" onclick="hideLeaderboard()" style="margin-top: 10px;">◀️ Назад</button>
         </div>
+        
+        <div class="debug" id="debug">
+            <div>Status: <span id="debug-status">OK</span></div>
+            <div>Last action: <span id="debug-action">-</span></div>
+        </div>
     </div>
     
     <script>
+        // Инициализация Telegram WebApp
         const tg = window.Telegram.WebApp;
-        const userId = new URLSearchParams(window.location.search).get('user_id');
+        
+        // Получаем user_id из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('user_id');
+        
+        console.log('=== ИНИЦИАЛИЗАЦИЯ ===');
+        console.log('User ID из URL:', userId);
+        console.log('Init data:', tg.initData);
+        
+        // Показываем ошибку если нет user_id
+        if (!userId) {
+            console.error('❌ НЕТ USER_ID В URL!');
+            document.getElementById('message').textContent = 'Ошибка: нет ID пользователя';
+            document.getElementById('message').className = 'message error';
+        }
         
         tg.ready();
         tg.expand();
@@ -194,12 +223,29 @@
         }
         
         function sendToBot(data) {
-            console.log('Отправка:', data);
-            tg.sendData(JSON.stringify(data));
+            // Добавляем user_id в данные, если его нет
+            if (!data.user_id && userId) {
+                data.user_id = parseInt(userId);
+            }
+            
+            console.log('📤 Отправка данных в бот:', data);
+            console.log('JSON данные:', JSON.stringify(data));
+            
+            try {
+                tg.sendData(JSON.stringify(data));
+                console.log('✅ Данные отправлены');
+            } catch (e) {
+                console.error('❌ Ошибка отправки:', e);
+                showMessage('Ошибка отправки', 'error');
+            }
         }
         
         function handleClick() {
             if (clickTimeout) return;
+            if (!userId) {
+                showMessage('Ошибка: нет ID пользователя', 'error');
+                return;
+            }
             
             const btn = document.getElementById('click-btn');
             if (btn.classList.contains('disabled')) {
@@ -207,12 +253,13 @@
                 return;
             }
             
+            console.log('🖱️ КЛИК!');
+            
             clickTimeout = true;
             btn.classList.add('disabled');
             
             sendToBot({
                 action: 'click',
-                user_id: userId,
                 timestamp: Date.now()
             });
             
@@ -223,6 +270,8 @@
         }
         
         function updateStats(data) {
+            console.log('📊 Обновление статистики:', data);
+            
             document.getElementById('clicks').textContent = data.clicks;
             document.getElementById('energy').textContent = data.energy + '/' + data.max_energy;
             document.getElementById('level').textContent = data.level;
@@ -244,21 +293,23 @@
         }
         
         function refreshStats() {
+            if (!userId) return;
+            console.log('🔄 Запрос статистики');
             sendToBot({
-                action: 'get_stats',
-                user_id: userId
+                action: 'get_stats'
             });
         }
         
         function showLeaderboard() {
+            if (!userId) return;
+            
             document.getElementById('stats').classList.add('hidden');
             document.getElementById('click-btn').classList.add('hidden');
             document.getElementById('menu').classList.add('hidden');
             document.getElementById('leaderboard-section').classList.remove('hidden');
             
             sendToBot({
-                action: 'get_leaderboard',
-                user_id: userId
+                action: 'get_leaderboard'
             });
         }
         
@@ -269,15 +320,18 @@
             document.getElementById('leaderboard-section').classList.add('hidden');
         }
         
+        // Обработка ответов от бота
         tg.onEvent('webAppData', function(event) {
-            console.log('Получено:', event);
+            console.log('📩 ПОЛУЧЕНЫ ДАННЫЕ ОТ БОТА:', event);
+            
             try {
                 const data = JSON.parse(event.data);
-                console.log('Данные:', data);
+                console.log('Распарсенные данные:', data);
                 
                 if (data.success) {
                     if (data.clicks !== undefined) {
                         updateStats(data);
+                        showMessage('✓', 'success');
                     }
                     
                     if (data.leaderboard) {
@@ -297,13 +351,26 @@
                     showMessage('Ошибка: ' + (data.error || 'Неизвестная ошибка'), 'error');
                 }
             } catch (e) {
-                console.error('Ошибка парсинга:', e);
+                console.error('❌ Ошибка парсинга:', e);
             }
         });
         
         // Запрашиваем статистику при загрузке
-        setTimeout(refreshStats, 500);
-        setInterval(refreshStats, 10000);
+        setTimeout(() => {
+            if (userId) {
+                console.log('📊 Первоначальный запрос статистики');
+                refreshStats();
+            }
+        }, 1000);
+        
+        // Автоматическое обновление каждые 10 секунд
+        setInterval(() => {
+            if (userId) {
+                refreshStats();
+            }
+        }, 10000);
+        
+        console.log('=== ИНИЦИАЛИЗАЦИЯ ЗАВЕРШЕНА ===');
     </script>
 </body>
 </html>
