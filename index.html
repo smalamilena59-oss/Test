@@ -2,375 +2,113 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Кликер</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--tg-theme-bg-color, #f0f2f5);
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background: var(--tg-theme-bg-color, #fff);
             color: var(--tg-theme-text-color, #000);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
         }
-        
-        .container {
-            max-width: 400px;
-            width: 100%;
-        }
-        
-        .stats {
-            background: var(--tg-theme-secondary-bg-color, #fff);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .stat-row {
-            display: flex;
-            justify-content: space-between;
-            margin: 10px 0;
-            font-size: 18px;
-        }
-        
-        .stat-value {
-            font-weight: bold;
-            color: var(--tg-theme-button-color, #40a7e3);
-        }
-        
-        .energy-bar {
-            width: 100%;
-            height: 20px;
-            background: #e0e0e0;
-            border-radius: 10px;
-            overflow: hidden;
-            margin: 10px 0;
-        }
-        
-        .energy-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #4caf50, #8bc34a);
-            transition: width 0.3s;
-        }
-        
-        .click-button {
-            width: 280px;
-            height: 280px;
+        .button {
+            width: 200px;
+            height: 200px;
             border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #ffd700, #ff8c00);
-            border: none;
-            cursor: pointer;
-            font-size: 36px;
-            font-weight: bold;
+            background: red;
             color: white;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-size: 30px;
+            font-weight: bold;
+            border: none;
+            margin: 50px auto;
+            cursor: pointer;
             box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-            margin: 20px auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.1s;
         }
-        
-        .click-button:active {
+        .button:active {
             transform: scale(0.95);
         }
-        
-        .click-button.disabled {
-            opacity: 0.5;
-            pointer-events: none;
+        .counter {
+            font-size: 48px;
+            margin: 20px;
         }
-        
-        .menu {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .menu-button {
-            background: var(--tg-theme-button-color, #40a7e3);
-            color: var(--tg-theme-button-text-color, #fff);
-            border: none;
-            border-radius: 10px;
-            padding: 15px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        
-        .message {
-            text-align: center;
-            margin: 10px 0;
-            min-height: 30px;
-            font-weight: bold;
-        }
-        
-        .success { color: #4caf50; }
-        .error { color: #f44336; }
-        
-        .hidden { display: none; }
-        
-        .leaderboard {
-            background: var(--tg-theme-secondary-bg-color, #fff);
-            border-radius: 16px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-        
-        .leaderboard-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-        }
-        
         .debug {
-            background: #f5f5f5;
-            padding: 10px;
-            border-radius: 8px;
             font-size: 12px;
-            margin-top: 20px;
-            display: none;
+            color: gray;
+            margin-top: 50px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="stats" id="stats">
-            <div class="stat-row">
-                <span>👆 Клики:</span>
-                <span class="stat-value" id="clicks">0</span>
-            </div>
-            <div class="stat-row">
-                <span>⚡ Энергия:</span>
-                <span class="stat-value" id="energy">100/100</span>
-            </div>
-            <div class="energy-bar">
-                <div class="energy-fill" id="energy-bar" style="width: 100%"></div>
-            </div>
-            <div class="stat-row">
-                <span>📊 Уровень:</span>
-                <span class="stat-value" id="level">1</span>
-            </div>
-            <div class="stat-row">
-                <span>💪 Сила:</span>
-                <span class="stat-value" id="power">2</span>
-            </div>
-        </div>
-        
-        <button class="click-button" id="click-btn" onclick="handleClick()">
-            👆<br>КЛИК
-        </button>
-        
-        <div class="message" id="message"></div>
-        
-        <div class="menu" id="menu">
-            <button class="menu-button" onclick="showLeaderboard()">🏆 Топ</button>
-            <button class="menu-button" onclick="refreshStats()">🔄 Обновить</button>
-        </div>
-        
-        <div id="leaderboard-section" class="hidden">
-            <div class="leaderboard" id="leaderboard-list"></div>
-            <button class="menu-button" onclick="hideLeaderboard()" style="margin-top: 10px;">◀️ Назад</button>
-        </div>
-        
-        <div class="debug" id="debug">
-            <div>Status: <span id="debug-status">OK</span></div>
-            <div>Last action: <span id="debug-action">-</span></div>
-        </div>
-    </div>
+    <h1>🚀 КЛИКЕР</h1>
     
+    <div class="counter" id="counter">0</div>
+    
+    <button class="button" id="clickBtn" onclick="handleClick()">
+        КЛИК
+    </button>
+    
+    <div id="status"></div>
+    
+    <div class="debug" id="debug"></div>
+
     <script>
-        // Инициализация Telegram WebApp
         const tg = window.Telegram.WebApp;
         
-        // Получаем user_id из URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const userId = urlParams.get('user_id');
-        
-        console.log('=== ИНИЦИАЛИЗАЦИЯ ===');
-        console.log('User ID из URL:', userId);
-        console.log('Init data:', tg.initData);
-        
-        // Показываем ошибку если нет user_id
-        if (!userId) {
-            console.error('❌ НЕТ USER_ID В URL!');
-            document.getElementById('message').textContent = 'Ошибка: нет ID пользователя';
-            document.getElementById('message').className = 'message error';
-        }
-        
+        // Показываем что WebApp готов
         tg.ready();
         tg.expand();
         
-        let clickTimeout = false;
+        console.log('WebApp запущен');
+        console.log('Init data:', tg.initData);
         
-        function showMessage(text, type = 'success') {
-            const msg = document.getElementById('message');
-            msg.textContent = text;
-            msg.className = 'message ' + type;
-            setTimeout(() => {
-                if (msg.textContent === text) {
-                    msg.textContent = '';
-                    msg.className = 'message';
-                }
-            }, 2000);
-        }
-        
-        function sendToBot(data) {
-            // Добавляем user_id в данные, если его нет
-            if (!data.user_id && userId) {
-                data.user_id = parseInt(userId);
-            }
-            
-            console.log('📤 Отправка данных в бот:', data);
-            console.log('JSON данные:', JSON.stringify(data));
-            
-            try {
-                tg.sendData(JSON.stringify(data));
-                console.log('✅ Данные отправлены');
-            } catch (e) {
-                console.error('❌ Ошибка отправки:', e);
-                showMessage('Ошибка отправки', 'error');
-            }
-        }
+        let clicks = 0;
         
         function handleClick() {
-            if (clickTimeout) return;
-            if (!userId) {
-                showMessage('Ошибка: нет ID пользователя', 'error');
-                return;
-            }
+            console.log('Клик!');
             
-            const btn = document.getElementById('click-btn');
-            if (btn.classList.contains('disabled')) {
-                showMessage('Нет энергии!', 'error');
-                return;
-            }
+            // Отправляем данные в бот
+            tg.sendData(JSON.stringify({
+                action: 'click'
+            }));
             
-            console.log('🖱️ КЛИК!');
-            
-            clickTimeout = true;
-            btn.classList.add('disabled');
-            
-            sendToBot({
-                action: 'click',
-                timestamp: Date.now()
-            });
-            
+            // Визуальный эффект
+            document.getElementById('clickBtn').style.transform = 'scale(0.9)';
             setTimeout(() => {
-                clickTimeout = false;
-                btn.classList.remove('disabled');
-            }, 500);
+                document.getElementById('clickBtn').style.transform = 'scale(1)';
+            }, 100);
         }
         
-        function updateStats(data) {
-            console.log('📊 Обновление статистики:', data);
-            
-            document.getElementById('clicks').textContent = data.clicks;
-            document.getElementById('energy').textContent = data.energy + '/' + data.max_energy;
-            document.getElementById('level').textContent = data.level;
-            document.getElementById('power').textContent = data.level + 1;
-            
-            const percent = (data.energy / data.max_energy) * 100;
-            document.getElementById('energy-bar').style.width = percent + '%';
-            
-            const btn = document.getElementById('click-btn');
-            if (data.energy <= 0) {
-                btn.classList.add('disabled');
-            } else {
-                btn.classList.remove('disabled');
-            }
-            
-            if (data.level_up) {
-                showMessage('🌟 УРОВЕНЬ ПОВЫШЕН!');
-            }
-        }
-        
-        function refreshStats() {
-            if (!userId) return;
-            console.log('🔄 Запрос статистики');
-            sendToBot({
-                action: 'get_stats'
-            });
-        }
-        
-        function showLeaderboard() {
-            if (!userId) return;
-            
-            document.getElementById('stats').classList.add('hidden');
-            document.getElementById('click-btn').classList.add('hidden');
-            document.getElementById('menu').classList.add('hidden');
-            document.getElementById('leaderboard-section').classList.remove('hidden');
-            
-            sendToBot({
-                action: 'get_leaderboard'
-            });
-        }
-        
-        function hideLeaderboard() {
-            document.getElementById('stats').classList.remove('hidden');
-            document.getElementById('click-btn').classList.remove('hidden');
-            document.getElementById('menu').classList.remove('hidden');
-            document.getElementById('leaderboard-section').classList.add('hidden');
-        }
-        
-        // Обработка ответов от бота
+        // Получаем ответ от бота
         tg.onEvent('webAppData', function(event) {
-            console.log('📩 ПОЛУЧЕНЫ ДАННЫЕ ОТ БОТА:', event);
+            console.log('Получен ответ:', event);
             
             try {
                 const data = JSON.parse(event.data);
-                console.log('Распарсенные данные:', data);
+                console.log('Данные:', data);
                 
                 if (data.success) {
-                    if (data.clicks !== undefined) {
-                        updateStats(data);
-                        showMessage('✓', 'success');
-                    }
+                    clicks = data.clicks;
+                    document.getElementById('counter').textContent = clicks;
+                    document.getElementById('status').textContent = '✓ Клик засчитан!';
+                    document.getElementById('status').style.color = 'green';
                     
-                    if (data.leaderboard) {
-                        const list = document.getElementById('leaderboard-list');
-                        list.innerHTML = '<h3>🏆 Топ игроков</h3>';
-                        data.leaderboard.forEach(item => {
-                            const div = document.createElement('div');
-                            div.className = 'leaderboard-item';
-                            div.innerHTML = `
-                                <span>${item.rank}. ${item.name}</span>
-                                <strong>${item.clicks}</strong>
-                            `;
-                            list.appendChild(div);
-                        });
-                    }
-                } else {
-                    showMessage('Ошибка: ' + (data.error || 'Неизвестная ошибка'), 'error');
+                    setTimeout(() => {
+                        document.getElementById('status').textContent = '';
+                    }, 1000);
                 }
-            } catch (e) {
-                console.error('❌ Ошибка парсинга:', e);
+            } catch(e) {
+                console.error('Ошибка:', e);
             }
         });
         
-        // Запрашиваем статистику при загрузке
-        setTimeout(() => {
-            if (userId) {
-                console.log('📊 Первоначальный запрос статистики');
-                refreshStats();
-            }
-        }, 1000);
-        
-        // Автоматическое обновление каждые 10 секунд
-        setInterval(() => {
-            if (userId) {
-                refreshStats();
-            }
-        }, 10000);
-        
-        console.log('=== ИНИЦИАЛИЗАЦИЯ ЗАВЕРШЕНА ===');
+        // Показываем отладочную информацию
+        document.getElementById('debug').innerHTML = `
+            Platform: ${tg.platform}<br>
+            Version: ${tg.version}<br>
+            Init data: ${tg.initData ? 'есть' : 'нет'}<br>
+            User ID: ${tg.initDataUnsafe?.user?.id || 'нет'}
+        `;
     </script>
 </body>
 </html>
