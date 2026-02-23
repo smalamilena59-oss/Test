@@ -3,47 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram Кликер</title>
+    <title>Кликер</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-        }
-        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--tg-theme-bg-color, #f0f2f5);
-            color: var(--tg-theme-text-color, #000000);
-            min-height: 100vh;
+            color: var(--tg-theme-text-color, #000);
+            margin: 0;
+            padding: 20px;
             display: flex;
             flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
         }
         
         .container {
             max-width: 400px;
-            margin: 0 auto;
-            padding: 20px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        
-        h1 {
-            color: var(--tg-theme-button-color, #40a7e3);
+            width: 100%;
         }
         
         .stats {
-            background: var(--tg-theme-secondary-bg-color, #ffffff);
+            background: var(--tg-theme-secondary-bg-color, #fff);
             border-radius: 16px;
-            padding: 15px;
+            padding: 20px;
             margin-bottom: 20px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
@@ -51,8 +34,8 @@
         .stat-row {
             display: flex;
             justify-content: space-between;
-            margin: 8px 0;
-            font-size: 16px;
+            margin: 10px 0;
+            font-size: 18px;
         }
         
         .stat-value {
@@ -72,42 +55,26 @@
         .energy-fill {
             height: 100%;
             background: linear-gradient(90deg, #4caf50, #8bc34a);
-            transition: width 0.3s ease;
-        }
-        
-        .clicker-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            margin: 20px 0;
+            transition: width 0.3s;
         }
         
         .click-button {
-            width: 250px;
-            height: 250px;
+            width: 280px;
+            height: 280px;
             border-radius: 50%;
             background: radial-gradient(circle at 30% 30%, #ffd700, #ff8c00);
             border: none;
             cursor: pointer;
-            font-size: 32px;
+            font-size: 36px;
             font-weight: bold;
             color: white;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
             box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-            transition: transform 0.1s;
-            margin: 20px 0;
+            margin: 20px auto;
             display: flex;
             align-items: center;
             justify-content: center;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+            transition: transform 0.1s;
         }
         
         .click-button:active {
@@ -128,140 +95,45 @@
         
         .menu-button {
             background: var(--tg-theme-button-color, #40a7e3);
-            color: var(--tg-theme-button-text-color, #ffffff);
+            color: var(--tg-theme-button-text-color, #fff);
             border: none;
             border-radius: 10px;
             padding: 15px;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: opacity 0.2s;
         }
         
-        .menu-button:active {
-            opacity: 0.8;
-        }
-        
-        .level-up {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(135deg, #ffd700, #ff8c00);
-            color: white;
-            padding: 15px 30px;
-            border-radius: 50px;
+        .message {
+            text-align: center;
+            margin: 10px 0;
+            min-height: 30px;
             font-weight: bold;
-            font-size: 18px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            animation: slideDown 0.5s ease;
-            z-index: 1000;
         }
         
-        @keyframes slideDown {
-            from { transform: translateX(-50%) translateY(-100px); }
-            to { transform: translateX(-50%) translateY(0); }
-        }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        
+        .hidden { display: none; }
         
         .leaderboard {
-            background: var(--tg-theme-secondary-bg-color, #ffffff);
+            background: var(--tg-theme-secondary-bg-color, #fff);
             border-radius: 16px;
-            padding: 15px;
+            padding: 20px;
             margin-top: 20px;
         }
         
         .leaderboard-item {
             display: flex;
             justify-content: space-between;
-            padding: 12px;
-            border-bottom: 1px solid #eee;
-            font-size: 16px;
-        }
-        
-        .leaderboard-item:last-child {
-            border-bottom: none;
-        }
-        
-        .hidden {
-            display: none;
-        }
-        
-        h2 {
-            margin-bottom: 15px;
-            text-align: center;
-            color: var(--tg-theme-text-color, #000000);
-        }
-        
-        .floating-number {
-            position: absolute;
-            color: #ffd700;
-            font-weight: bold;
-            font-size: 24px;
-            pointer-events: none;
-            animation: floatUp 1s ease-out forwards;
-        }
-        
-        @keyframes floatUp {
-            0% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-            100% {
-                opacity: 0;
-                transform: translateY(-50px);
-            }
-        }
-        
-        .message {
-            height: 30px;
-            margin-top: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-        
-        .success {
-            color: #4caf50;
-        }
-        
-        .error {
-            color: #f44336;
-        }
-        
-        .info {
-            color: #2196f3;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 20px;
-            font-size: 18px;
-            color: var(--tg-theme-hint-color, #999);
-        }
-        
-        .debug-panel {
-            background: #f5f5f5;
-            border-radius: 8px;
             padding: 10px;
-            margin-top: 10px;
-            font-size: 12px;
-            color: #666;
-            border: 1px solid #ddd;
-        }
-        
-        .debug-panel.hidden {
-            display: none;
+            border-bottom: 1px solid #eee;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🚀 КЛИКЕР</h1>
-        </div>
-        
-        <div class="stats" id="stats-section">
+        <div class="stats" id="stats">
             <div class="stat-row">
                 <span>👆 Клики:</span>
                 <span class="stat-value" id="clicks">0</span>
@@ -278,203 +150,111 @@
                 <span class="stat-value" id="level">1</span>
             </div>
             <div class="stat-row">
-                <span>💪 Сила клика:</span>
-                <span class="stat-value" id="click-power">2</span>
+                <span>💪 Сила:</span>
+                <span class="stat-value" id="power">2</span>
             </div>
         </div>
         
-        <div class="clicker-area" id="clicker-section">
-            <div style="position: relative;">
-                <button class="click-button" id="click-btn" onclick="handleClick(event)">
-                    👆<br>КЛИК
-                </button>
-            </div>
-            <div class="message" id="message"></div>
-            <div class="debug-panel" id="debug-panel">
-                <div>Статус: <span id="status-text">Ожидание...</span></div>
-                <div>Последний ответ: <span id="last-response">-</span></div>
-                <div>Баланс: <span id="balance-check">-</span></div>
-            </div>
-        </div>
+        <button class="click-button" id="click-btn" onclick="handleClick()">
+            👆<br>КЛИК
+        </button>
         
-        <div class="menu" id="menu-section">
-            <button class="menu-button" onclick="showLeaderboard()">
-                🏆 Топ игроков
-            </button>
-            <button class="menu-button" onclick="refreshStats()">
-                🔄 Обновить
-            </button>
-            <button class="menu-button" onclick="testConnection()">
-                📡 Тест
-            </button>
+        <div class="message" id="message"></div>
+        
+        <div class="menu" id="menu">
+            <button class="menu-button" onclick="showLeaderboard()">🏆 Топ</button>
+            <button class="menu-button" onclick="refreshStats()">🔄 Обновить</button>
         </div>
         
         <div id="leaderboard-section" class="hidden">
-            <h2>🏆 Топ игроков</h2>
-            <div id="leaderboard-list" class="leaderboard">
-                <div class="loading">Загрузка...</div>
-            </div>
-            <button class="menu-button" onclick="hideLeaderboard()" style="margin-top: 15px;">◀️ Назад</button>
+            <div class="leaderboard" id="leaderboard-list"></div>
+            <button class="menu-button" onclick="hideLeaderboard()" style="margin-top: 10px;">◀️ Назад</button>
         </div>
     </div>
     
-    <div id="level-up-message" class="level-up hidden">🌟 УРОВЕНЬ ПОВЫШЕН!</div>
-    
     <script>
-        // Инициализация Telegram WebApp
-        let tg = window.Telegram.WebApp;
-        let userId = new URLSearchParams(window.location.search).get('user_id');
+        const tg = window.Telegram.WebApp;
+        const userId = new URLSearchParams(window.location.search).get('user_id');
         
-        console.log('=== ИНИЦИАЛИЗАЦИЯ ===');
-        console.log('User ID:', userId);
-        console.log('Platform:', tg.platform);
-        console.log('Version:', tg.version);
-        
-        // Переменные состояния
-        let lastClickTime = 0;
-        let clickTimeout = 300; // миллисекунд между кликами
-        
-        // Расширяем WebApp на весь экран
+        tg.ready();
         tg.expand();
         
-        // Ждем готовности
-        tg.ready();
+        let clickTimeout = false;
         
-        // Функция для обновления статуса
-        function updateStatus(text, type = 'info') {
-            const statusEl = document.getElementById('status-text');
-            const messageEl = document.getElementById('message');
-            
-            statusEl.textContent = text;
-            
-            messageEl.textContent = text;
-            messageEl.className = 'message ' + type;
-            
+        function showMessage(text, type = 'success') {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = 'message ' + type;
             setTimeout(() => {
-                if (messageEl.textContent === text) {
-                    messageEl.textContent = '';
-                    messageEl.className = 'message';
+                if (msg.textContent === text) {
+                    msg.textContent = '';
+                    msg.className = 'message';
                 }
             }, 2000);
         }
         
-        // Функция отправки данных в бот
         function sendToBot(data) {
-            console.log('📤 Отправка данных в бот:', data);
-            try {
-                const jsonData = JSON.stringify(data);
-                console.log('JSON данные:', jsonData);
-                tg.sendData(jsonData);
-                console.log('✅ Данные отправлены');
-                updateStatus('Отправка...', 'info');
-            } catch (e) {
-                console.error('❌ Ошибка отправки данных:', e);
-                updateStatus('Ошибка отправки', 'error');
-            }
+            console.log('Отправка:', data);
+            tg.sendData(JSON.stringify(data));
         }
         
-        // Обработка клика
-        function handleClick(event) {
-            const now = Date.now();
+        function handleClick() {
+            if (clickTimeout) return;
             
-            // Защита от двойных кликов
-            if (now - lastClickTime < clickTimeout) {
-                console.log('Слишком частые клики');
-                return;
-            }
-            lastClickTime = now;
-            
-            console.log('🖱️ КЛИК!');
             const btn = document.getElementById('click-btn');
-            
             if (btn.classList.contains('disabled')) {
-                console.log('Кнопка заблокирована');
-                updateStatus('Нет энергии!', 'error');
+                showMessage('Нет энергии!', 'error');
                 return;
             }
             
-            // Блокируем кнопку
+            clickTimeout = true;
             btn.classList.add('disabled');
             
-            // Показываем эффект
-            showClickEffect(event);
-            
-            // Отправляем данные
             sendToBot({
                 action: 'click',
                 user_id: userId,
-                timestamp: now
+                timestamp: Date.now()
             });
             
-            // Разблокируем через 500мс
             setTimeout(() => {
+                clickTimeout = false;
                 btn.classList.remove('disabled');
             }, 500);
         }
         
-        // Эффект клика
-        function showClickEffect(event) {
-            const btn = document.getElementById('click-btn');
-            const rect = btn.getBoundingClientRect();
-            
-            // Создаем плавающее число
-            const floatingNum = document.createElement('div');
-            floatingNum.className = 'floating-number';
-            floatingNum.textContent = '+1';
-            floatingNum.style.left = (rect.left + rect.width/2) + 'px';
-            floatingNum.style.top = (rect.top) + 'px';
-            document.body.appendChild(floatingNum);
-            
-            setTimeout(() => {
-                floatingNum.remove();
-            }, 1000);
-        }
-        
-        // Обновление статистики
         function updateStats(data) {
-            console.log('📊 Обновление статистики:', data);
-            
-            // Обновляем значения
             document.getElementById('clicks').textContent = data.clicks;
             document.getElementById('energy').textContent = data.energy + '/' + data.max_energy;
             document.getElementById('level').textContent = data.level;
-            document.getElementById('click-power').textContent = data.level + 1;
+            document.getElementById('power').textContent = data.level + 1;
             
-            // Обновляем энергобар
-            const energyPercent = (data.energy / data.max_energy) * 100;
-            document.getElementById('energy-bar').style.width = energyPercent + '%';
+            const percent = (data.energy / data.max_energy) * 100;
+            document.getElementById('energy-bar').style.width = percent + '%';
             
-            // Обновляем проверку баланса
-            document.getElementById('balance-check').textContent = data.clicks;
-            
-            // Блокируем кнопку если нет энергии
             const btn = document.getElementById('click-btn');
             if (data.energy <= 0) {
                 btn.classList.add('disabled');
             } else {
                 btn.classList.remove('disabled');
             }
-        }
-        
-        // Показ уведомления о повышении уровня
-        function showLevelUp() {
-            console.log('🌟 Level Up!');
-            const msg = document.getElementById('level-up-message');
-            msg.classList.remove('hidden');
-            setTimeout(() => {
-                msg.classList.add('hidden');
-            }, 3000);
-        }
-        
-        // Показ топа игроков
-        function showLeaderboard() {
-            console.log('Показ топа');
-            document.getElementById('stats-section').classList.add('hidden');
-            document.getElementById('clicker-section').classList.add('hidden');
-            document.getElementById('menu-section').classList.add('hidden');
-            document.getElementById('leaderboard-section').classList.remove('hidden');
             
-            document.getElementById('leaderboard-list').innerHTML = '<div class="loading">Загрузка...</div>';
+            if (data.level_up) {
+                showMessage('🌟 УРОВЕНЬ ПОВЫШЕН!');
+            }
+        }
+        
+        function refreshStats() {
+            sendToBot({
+                action: 'get_stats',
+                user_id: userId
+            });
+        }
+        
+        function showLeaderboard() {
+            document.getElementById('stats').classList.add('hidden');
+            document.getElementById('click-btn').classList.add('hidden');
+            document.getElementById('menu').classList.add('hidden');
+            document.getElementById('leaderboard-section').classList.remove('hidden');
             
             sendToBot({
                 action: 'get_leaderboard',
@@ -482,115 +262,48 @@
             });
         }
         
-        // Скрытие топа
         function hideLeaderboard() {
-            console.log('Скрытие топа');
-            document.getElementById('stats-section').classList.remove('hidden');
-            document.getElementById('clicker-section').classList.remove('hidden');
-            document.getElementById('menu-section').classList.remove('hidden');
+            document.getElementById('stats').classList.remove('hidden');
+            document.getElementById('click-btn').classList.remove('hidden');
+            document.getElementById('menu').classList.remove('hidden');
             document.getElementById('leaderboard-section').classList.add('hidden');
         }
         
-        // Обновление статистики
-        function refreshStats() {
-            console.log('Запрос статистики');
-            sendToBot({
-                action: 'get_stats',
-                user_id: userId
-            });
-        }
-        
-        // Тест соединения
-        function testConnection() {
-            console.log('Тест соединения');
-            updateStatus('Проверка соединения...', 'info');
-            sendToBot({
-                action: 'test',
-                user_id: userId
-            });
-        }
-        
-        // Обработка данных от бота
         tg.onEvent('webAppData', function(event) {
-            console.log('📩 ПОЛУЧЕНЫ ДАННЫЕ ОТ БОТА:', event);
-            
+            console.log('Получено:', event);
             try {
                 const data = JSON.parse(event.data);
-                console.log('Распарсенные данные:', data);
-                
-                // Обновляем отладочную информацию
-                document.getElementById('last-response').textContent = 
-                    new Date().toLocaleTimeString() + ': ' + JSON.stringify(data).substring(0, 50);
+                console.log('Данные:', data);
                 
                 if (data.success) {
                     if (data.clicks !== undefined) {
                         updateStats(data);
-                        updateStatus(data.message || 'Успешно!', 'success');
-                    }
-                    
-                    if (data.level_up) {
-                        showLevelUp();
                     }
                     
                     if (data.leaderboard) {
                         const list = document.getElementById('leaderboard-list');
-                        if (data.leaderboard.length === 0) {
-                            list.innerHTML = '<div class="loading">Топ пока пуст</div>';
-                        } else {
-                            list.innerHTML = '';
-                            data.leaderboard.forEach(item => {
-                                const div = document.createElement('div');
-                                div.className = 'leaderboard-item';
-                                
-                                let medal = '';
-                                if (item.rank === 1) medal = '🥇';
-                                else if (item.rank === 2) medal = '🥈';
-                                else if (item.rank === 3) medal = '🥉';
-                                else medal = '👤';
-                                
-                                div.innerHTML = `
-                                    <span>${medal} ${item.rank}. ${item.name}</span>
-                                    <strong>${item.clicks} 👆</strong>
-                                `;
-                                list.appendChild(div);
-                            });
-                        }
-                    }
-                    
-                    if (data.message && data.message.includes('Соединение работает')) {
-                        updateStatus('✅ Соединение работает!', 'success');
+                        list.innerHTML = '<h3>🏆 Топ игроков</h3>';
+                        data.leaderboard.forEach(item => {
+                            const div = document.createElement('div');
+                            div.className = 'leaderboard-item';
+                            div.innerHTML = `
+                                <span>${item.rank}. ${item.name}</span>
+                                <strong>${item.clicks}</strong>
+                            `;
+                            list.appendChild(div);
+                        });
                     }
                 } else {
-                    console.error('Ошибка в ответе:', data.message);
-                    updateStatus('❌ ' + (data.message || 'Ошибка'), 'error');
+                    showMessage('Ошибка: ' + (data.error || 'Неизвестная ошибка'), 'error');
                 }
             } catch (e) {
-                console.error('Ошибка парсинга данных:', e);
-                updateStatus('Ошибка получения данных', 'error');
+                console.error('Ошибка парсинга:', e);
             }
         });
         
-        // Обработка ошибок
-        tg.onEvent('webAppClose', function() {
-            console.log('WebApp закрыт');
-        });
-        
         // Запрашиваем статистику при загрузке
-        setTimeout(() => {
-            console.log('Первоначальный запрос статистики');
-            refreshStats();
-        }, 1000);
-        
-        // Автоматическое обновление каждые 5 секунд
-        setInterval(refreshStats, 5000);
-        
-        // Обработка ошибок
-        window.onerror = function(msg, url, line, col, error) {
-            console.error('❌ Ошибка:', msg, 'на строке', line);
-            updateStatus('Ошибка: ' + msg, 'error');
-        };
-        
-        console.log('=== ИНИЦИАЛИЗАЦИЯ ЗАВЕРШЕНА ===');
+        setTimeout(refreshStats, 500);
+        setInterval(refreshStats, 10000);
     </script>
 </body>
 </html>
