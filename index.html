@@ -2,86 +2,201 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Кликер</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-            background: var(--tg-theme-bg-color, #fff);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--tg-theme-bg-color, #f0f2f5);
             color: var(--tg-theme-text-color, #000);
+            margin: 0;
+            padding: 20px;
+            text-align: center;
         }
-        .button {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            background: red;
-            color: white;
-            font-size: 30px;
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: var(--tg-theme-button-color, #40a7e3);
+        }
+        
+        .stats {
+            background: var(--tg-theme-secondary-bg-color, #fff);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            font-size: 18px;
+        }
+        
+        .stat-value {
             font-weight: bold;
-            border: none;
-            margin: 50px auto;
-            cursor: pointer;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            color: var(--tg-theme-button-color, #40a7e3);
         }
-        .button:active {
+        
+        .click-button {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #ff4757, #ff0000);
+            border: none;
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(255,0,0,0.3);
+            margin: 30px auto;
+            transition: transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .click-button:active {
             transform: scale(0.95);
         }
-        .counter {
-            font-size: 48px;
-            margin: 20px;
+        
+        .message {
+            min-height: 30px;
+            margin: 10px;
+            font-weight: bold;
         }
-        .debug {
-            font-size: 12px;
-            color: gray;
-            margin-top: 50px;
+        
+        .success {
+            color: #4caf50;
+        }
+        
+        .error {
+            color: #f44336;
+        }
+        
+        .user-info {
+            background: var(--tg-theme-secondary-bg-color, #fff);
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 14px;
+            color: var(--tg-theme-hint-color, #999);
         }
     </style>
 </head>
 <body>
-    <h1>🚀 КЛИКЕР</h1>
-    
-    <div class="counter" id="counter">0</div>
-    
-    <button class="button" id="clickBtn" onclick="handleClick()">
-        КЛИК
-    </button>
-    
-    <div id="status"></div>
-    
-    <div class="debug" id="debug"></div>
+    <div class="container">
+        <h1>🚀 КЛИКЕР</h1>
+        
+        <div class="user-info" id="userInfo">
+            Загрузка...
+        </div>
+        
+        <div class="stats">
+            <div class="stat-row">
+                <span>👆 Клики:</span>
+                <span class="stat-value" id="clicks">0</span>
+            </div>
+            <div class="stat-row">
+                <span>⚡ Энергия:</span>
+                <span class="stat-value" id="energy">100/100</span>
+            </div>
+            <div class="stat-row">
+                <span>📊 Уровень:</span>
+                <span class="stat-value" id="level">1</span>
+            </div>
+            <div class="stat-row">
+                <span>💪 Сила:</span>
+                <span class="stat-value" id="power">2</span>
+            </div>
+        </div>
+        
+        <button class="click-button" id="clickBtn" onclick="handleClick()">
+            КЛИК
+        </button>
+        
+        <div class="message" id="message"></div>
+    </div>
 
     <script>
+        // Инициализация Telegram WebApp
         const tg = window.Telegram.WebApp;
         
         // Показываем что WebApp готов
         tg.ready();
         tg.expand();
         
-        console.log('WebApp запущен');
-        console.log('Init data:', tg.initData);
+        // Получаем данные пользователя из Telegram
+        const initData = tg.initDataUnsafe;
+        const user = initData.user;
+        
+        console.log('=== ДАННЫЕ ПОЛЬЗОВАТЕЛЯ ===');
+        console.log('initData:', initData);
+        console.log('user:', user);
+        
+        // Показываем информацию о пользователе
+        const userInfo = document.getElementById('userInfo');
+        if (user) {
+            userInfo.innerHTML = `
+                ✅ ID: ${user.id}<br>
+                Имя: ${user.first_name}<br>
+                Юзернейм: ${user.username || 'нет'}<br>
+                Platform: ${tg.platform}
+            `;
+        } else {
+            userInfo.innerHTML = '❌ Нет данных пользователя!';
+            userInfo.style.color = 'red';
+        }
         
         let clicks = 0;
         
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = 'message ' + type;
+            setTimeout(() => {
+                if (msg.textContent === text) {
+                    msg.textContent = '';
+                    msg.className = 'message';
+                }
+            }, 2000);
+        }
+        
         function handleClick() {
-            console.log('Клик!');
+            console.log('🖱️ Клик!');
+            
+            // Проверяем, есть ли пользователь
+            if (!user) {
+                showMessage('Ошибка: нет данных пользователя', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('clickBtn');
+            btn.style.transform = 'scale(0.9)';
             
             // Отправляем данные в бот
-            tg.sendData(JSON.stringify({
+            const data = {
                 action: 'click'
-            }));
+                // НЕ НУЖНО отправлять user_id - бот сам знает, кто отправил
+            };
             
-            // Визуальный эффект
-            document.getElementById('clickBtn').style.transform = 'scale(0.9)';
+            console.log('📤 Отправка:', data);
+            tg.sendData(JSON.stringify(data));
+            
             setTimeout(() => {
-                document.getElementById('clickBtn').style.transform = 'scale(1)';
+                btn.style.transform = 'scale(1)';
             }, 100);
         }
         
         // Получаем ответ от бота
         tg.onEvent('webAppData', function(event) {
-            console.log('Получен ответ:', event);
+            console.log('📥 Получен ответ:', event);
             
             try {
                 const data = JSON.parse(event.data);
@@ -89,26 +204,29 @@
                 
                 if (data.success) {
                     clicks = data.clicks;
-                    document.getElementById('counter').textContent = clicks;
-                    document.getElementById('status').textContent = '✓ Клик засчитан!';
-                    document.getElementById('status').style.color = 'green';
-                    
-                    setTimeout(() => {
-                        document.getElementById('status').textContent = '';
-                    }, 1000);
+                    document.getElementById('clicks').textContent = clicks;
+                    showMessage('✓ Клик засчитан!', 'success');
+                } else {
+                    showMessage('Ошибка: ' + (data.error || 'неизвестная ошибка'), 'error');
                 }
             } catch(e) {
-                console.error('Ошибка:', e);
+                console.error('Ошибка парсинга:', e);
             }
         });
         
-        // Показываем отладочную информацию
-        document.getElementById('debug').innerHTML = `
-            Platform: ${tg.platform}<br>
-            Version: ${tg.version}<br>
-            Init data: ${tg.initData ? 'есть' : 'нет'}<br>
-            User ID: ${tg.initDataUnsafe?.user?.id || 'нет'}
-        `;
+        // Периодически запрашиваем статистику
+        function refreshStats() {
+            if (!user) return;
+            
+            tg.sendData(JSON.stringify({
+                action: 'get_stats'
+            }));
+        }
+        
+        // Запрашиваем статистику при загрузке
+        setTimeout(refreshStats, 1000);
+        
+        console.log('=== ГОТОВО ===');
     </script>
 </body>
 </html>
