@@ -119,16 +119,6 @@
             pointer-events: none;
         }
         
-        .click-button.clicked {
-            animation: clickEffect 0.2s ease;
-        }
-        
-        @keyframes clickEffect {
-            0% { transform: scale(1); }
-            50% { transform: scale(0.9); }
-            100% { transform: scale(1); }
-        }
-        
         .menu {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -222,13 +212,25 @@
             }
         }
         
-        .click-message {
+        .message {
             height: 30px;
             margin-top: 10px;
             font-size: 18px;
             font-weight: bold;
             text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .success {
             color: #4caf50;
+        }
+        
+        .error {
+            color: #f44336;
+        }
+        
+        .info {
+            color: #2196f3;
         }
         
         .loading {
@@ -238,13 +240,18 @@
             color: var(--tg-theme-hint-color, #999);
         }
         
-        .error-message {
-            background: #ff4444;
-            color: white;
+        .debug-panel {
+            background: #f5f5f5;
+            border-radius: 8px;
             padding: 10px;
-            border-radius: 10px;
-            text-align: center;
-            margin: 10px 0;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+        
+        .debug-panel.hidden {
+            display: none;
         }
     </style>
 </head>
@@ -282,7 +289,12 @@
                     👆<br>КЛИК
                 </button>
             </div>
-            <div class="click-message" id="click-message"></div>
+            <div class="message" id="message"></div>
+            <div class="debug-panel" id="debug-panel">
+                <div>Статус: <span id="status-text">Ожидание...</span></div>
+                <div>Последний ответ: <span id="last-response">-</span></div>
+                <div>Баланс: <span id="balance-check">-</span></div>
+            </div>
         </div>
         
         <div class="menu" id="menu-section">
@@ -291,6 +303,9 @@
             </button>
             <button class="menu-button" onclick="refreshStats()">
                 🔄 Обновить
+            </button>
+            <button class="menu-button" onclick="testConnection()">
+                📡 Тест
             </button>
         </div>
         
@@ -310,10 +325,14 @@
         let tg = window.Telegram.WebApp;
         let userId = new URLSearchParams(window.location.search).get('user_id');
         
-        console.log('Telegram WebApp инициализирован');
+        console.log('=== ИНИЦИАЛИЗАЦИЯ ===');
         console.log('User ID:', userId);
         console.log('Platform:', tg.platform);
         console.log('Version:', tg.version);
+        
+        // Переменные состояния
+        let lastClickTime = 0;
+        let clickTimeout = 300; // миллисекунд между кликами
         
         // Расширяем WebApp на весь экран
         tg.expand();
@@ -321,67 +340,76 @@
         // Ждем готовности
         tg.ready();
         
-        // Функция отправки данных в бот
-        function sendToBot(data) {
-            console.log('Отправка данных в бот:', data);
-            try {
-                tg.sendData(JSON.stringify(data));
-                console.log('Данные отправлены');
-            } catch (e) {
-                console.error('Ошибка отправки данных:', e);
-                showError('Ошибка отправки данных');
-            }
-        }
-        
-        // Показ ошибки
-        function showError(message) {
-            const msgDiv = document.getElementById('click-message');
-            msgDiv.textContent = message;
-            msgDiv.style.color = '#ff4444';
+        // Функция для обновления статуса
+        function updateStatus(text, type = 'info') {
+            const statusEl = document.getElementById('status-text');
+            const messageEl = document.getElementById('message');
+            
+            statusEl.textContent = text;
+            
+            messageEl.textContent = text;
+            messageEl.className = 'message ' + type;
+            
             setTimeout(() => {
-                msgDiv.textContent = '';
+                if (messageEl.textContent === text) {
+                    messageEl.textContent = '';
+                    messageEl.className = 'message';
+                }
             }, 2000);
         }
         
-        // Показ успеха
-        function showSuccess(message) {
-            const msgDiv = document.getElementById('click-message');
-            msgDiv.textContent = message;
-            msgDiv.style.color = '#4caf50';
-            setTimeout(() => {
-                msgDiv.textContent = '';
-            }, 1000);
+        // Функция отправки данных в бот
+        function sendToBot(data) {
+            console.log('📤 Отправка данных в бот:', data);
+            try {
+                const jsonData = JSON.stringify(data);
+                console.log('JSON данные:', jsonData);
+                tg.sendData(jsonData);
+                console.log('✅ Данные отправлены');
+                updateStatus('Отправка...', 'info');
+            } catch (e) {
+                console.error('❌ Ошибка отправки данных:', e);
+                updateStatus('Ошибка отправки', 'error');
+            }
         }
         
         // Обработка клика
         function handleClick(event) {
-            console.log('Клик!');
+            const now = Date.now();
+            
+            // Защита от двойных кликов
+            if (now - lastClickTime < clickTimeout) {
+                console.log('Слишком частые клики');
+                return;
+            }
+            lastClickTime = now;
+            
+            console.log('🖱️ КЛИК!');
             const btn = document.getElementById('click-btn');
             
             if (btn.classList.contains('disabled')) {
                 console.log('Кнопка заблокирована');
-                showError('Нет энергии!');
+                updateStatus('Нет энергии!', 'error');
                 return;
             }
             
             // Блокируем кнопку
             btn.classList.add('disabled');
-            btn.classList.add('clicked');
-            
-            // Отправляем данные
-            sendToBot({
-                action: 'click',
-                user_id: userId
-            });
             
             // Показываем эффект
             showClickEffect(event);
             
-            // Разблокируем через 300мс
+            // Отправляем данные
+            sendToBot({
+                action: 'click',
+                user_id: userId,
+                timestamp: now
+            });
+            
+            // Разблокируем через 500мс
             setTimeout(() => {
                 btn.classList.remove('disabled');
-                btn.classList.remove('clicked');
-            }, 300);
+            }, 500);
         }
         
         // Эффект клика
@@ -400,14 +428,11 @@
             setTimeout(() => {
                 floatingNum.remove();
             }, 1000);
-            
-            // Показываем сообщение
-            showSuccess('Клик отправлен!');
         }
         
         // Обновление статистики
         function updateStats(data) {
-            console.log('Обновление статистики:', data);
+            console.log('📊 Обновление статистики:', data);
             
             // Обновляем значения
             document.getElementById('clicks').textContent = data.clicks;
@@ -419,6 +444,9 @@
             const energyPercent = (data.energy / data.max_energy) * 100;
             document.getElementById('energy-bar').style.width = energyPercent + '%';
             
+            // Обновляем проверку баланса
+            document.getElementById('balance-check').textContent = data.clicks;
+            
             // Блокируем кнопку если нет энергии
             const btn = document.getElementById('click-btn');
             if (data.energy <= 0) {
@@ -426,16 +454,11 @@
             } else {
                 btn.classList.remove('disabled');
             }
-            
-            // Показываем сообщение о клике
-            if (data.message) {
-                showSuccess(data.message);
-            }
         }
         
         // Показ уведомления о повышении уровня
         function showLevelUp() {
-            console.log('Level Up!');
+            console.log('🌟 Level Up!');
             const msg = document.getElementById('level-up-message');
             msg.classList.remove('hidden');
             setTimeout(() => {
@@ -477,16 +500,32 @@
             });
         }
         
+        // Тест соединения
+        function testConnection() {
+            console.log('Тест соединения');
+            updateStatus('Проверка соединения...', 'info');
+            sendToBot({
+                action: 'test',
+                user_id: userId
+            });
+        }
+        
         // Обработка данных от бота
         tg.onEvent('webAppData', function(event) {
-            console.log('Получены данные от бота:', event);
+            console.log('📩 ПОЛУЧЕНЫ ДАННЫЕ ОТ БОТА:', event);
+            
             try {
                 const data = JSON.parse(event.data);
                 console.log('Распарсенные данные:', data);
                 
+                // Обновляем отладочную информацию
+                document.getElementById('last-response').textContent = 
+                    new Date().toLocaleTimeString() + ': ' + JSON.stringify(data).substring(0, 50);
+                
                 if (data.success) {
                     if (data.clicks !== undefined) {
                         updateStats(data);
+                        updateStatus(data.message || 'Успешно!', 'success');
                     }
                     
                     if (data.level_up) {
@@ -518,16 +557,16 @@
                         }
                     }
                     
-                    // Показываем сообщение если есть
-                    if (data.message) {
-                        showSuccess(data.message);
+                    if (data.message && data.message.includes('Соединение работает')) {
+                        updateStatus('✅ Соединение работает!', 'success');
                     }
                 } else {
-                    showError(data.message || 'Ошибка');
+                    console.error('Ошибка в ответе:', data.message);
+                    updateStatus('❌ ' + (data.message || 'Ошибка'), 'error');
                 }
             } catch (e) {
                 console.error('Ошибка парсинга данных:', e);
-                showError('Ошибка получения данных');
+                updateStatus('Ошибка получения данных', 'error');
             }
         });
         
@@ -542,13 +581,16 @@
             refreshStats();
         }, 1000);
         
-        // Автоматическое обновление каждые 10 секунд
-        setInterval(refreshStats, 10000);
+        // Автоматическое обновление каждые 5 секунд
+        setInterval(refreshStats, 5000);
         
         // Обработка ошибок
         window.onerror = function(msg, url, line, col, error) {
-            console.error('Ошибка:', msg, 'на строке', line);
+            console.error('❌ Ошибка:', msg, 'на строке', line);
+            updateStatus('Ошибка: ' + msg, 'error');
         };
+        
+        console.log('=== ИНИЦИАЛИЗАЦИЯ ЗАВЕРШЕНА ===');
     </script>
 </body>
 </html>
