@@ -36,6 +36,10 @@
             margin-bottom: 20px;
         }
         
+        h1 {
+            color: var(--tg-theme-button-color, #40a7e3);
+        }
+        
         .stats {
             background: var(--tg-theme-secondary-bg-color, #ffffff);
             border-radius: 16px;
@@ -115,6 +119,16 @@
             pointer-events: none;
         }
         
+        .click-button.clicked {
+            animation: clickEffect 0.2s ease;
+        }
+        
+        @keyframes clickEffect {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.9); }
+            100% { transform: scale(1); }
+        }
+        
         .menu {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -145,21 +159,18 @@
             transform: translateX(-50%);
             background: linear-gradient(135deg, #ffd700, #ff8c00);
             color: white;
-            padding: 10px 20px;
+            padding: 15px 30px;
             border-radius: 50px;
             font-weight: bold;
+            font-size: 18px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            animation: slideDown 0.5s ease, fadeOut 2s ease forwards 1s;
+            animation: slideDown 0.5s ease;
             z-index: 1000;
         }
         
         @keyframes slideDown {
             from { transform: translateX(-50%) translateY(-100px); }
             to { transform: translateX(-50%) translateY(0); }
-        }
-        
-        @keyframes fadeOut {
-            to { opacity: 0; }
         }
         
         .leaderboard {
@@ -172,8 +183,13 @@
         .leaderboard-item {
             display: flex;
             justify-content: space-between;
-            padding: 10px;
+            padding: 12px;
             border-bottom: 1px solid #eee;
+            font-size: 16px;
+        }
+        
+        .leaderboard-item:last-child {
+            border-bottom: none;
         }
         
         .hidden {
@@ -183,6 +199,52 @@
         h2 {
             margin-bottom: 15px;
             text-align: center;
+            color: var(--tg-theme-text-color, #000000);
+        }
+        
+        .floating-number {
+            position: absolute;
+            color: #ffd700;
+            font-weight: bold;
+            font-size: 24px;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+        }
+        
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+        }
+        
+        .click-message {
+            height: 30px;
+            margin-top: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            color: #4caf50;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 18px;
+            color: var(--tg-theme-hint-color, #999);
+        }
+        
+        .error-message {
+            background: #ff4444;
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 10px 0;
         }
     </style>
 </head>
@@ -208,12 +270,19 @@
                 <span>📊 Уровень:</span>
                 <span class="stat-value" id="level">1</span>
             </div>
+            <div class="stat-row">
+                <span>💪 Сила клика:</span>
+                <span class="stat-value" id="click-power">2</span>
+            </div>
         </div>
         
         <div class="clicker-area" id="clicker-section">
-            <button class="click-button" id="click-btn" onclick="handleClick()">
-                👆<br>КЛИК
-            </button>
+            <div style="position: relative;">
+                <button class="click-button" id="click-btn" onclick="handleClick(event)">
+                    👆<br>КЛИК
+                </button>
+            </div>
+            <div class="click-message" id="click-message"></div>
         </div>
         
         <div class="menu" id="menu-section">
@@ -227,63 +296,146 @@
         
         <div id="leaderboard-section" class="hidden">
             <h2>🏆 Топ игроков</h2>
-            <div id="leaderboard-list" class="leaderboard"></div>
-            <button class="menu-button" onclick="hideLeaderboard()" style="margin-top: 15px;">Назад</button>
+            <div id="leaderboard-list" class="leaderboard">
+                <div class="loading">Загрузка...</div>
+            </div>
+            <button class="menu-button" onclick="hideLeaderboard()" style="margin-top: 15px;">◀️ Назад</button>
         </div>
     </div>
     
     <div id="level-up-message" class="level-up hidden">🌟 УРОВЕНЬ ПОВЫШЕН!</div>
     
     <script>
+        // Инициализация Telegram WebApp
         let tg = window.Telegram.WebApp;
-        let userId = new URLSearchParams(window.location.search).get('user_id') || 
-                    new URLSearchParams(window.location.search).get('start');
+        let userId = new URLSearchParams(window.location.search).get('user_id');
         
-        // Инициализация WebApp
-        tg.ready();
+        console.log('Telegram WebApp инициализирован');
+        console.log('User ID:', userId);
+        console.log('Platform:', tg.platform);
+        console.log('Version:', tg.version);
+        
+        // Расширяем WebApp на весь экран
         tg.expand();
-        tg.MainButton.hide();
+        
+        // Ждем готовности
+        tg.ready();
         
         // Функция отправки данных в бот
         function sendToBot(data) {
-            tg.sendData(JSON.stringify(data));
+            console.log('Отправка данных в бот:', data);
+            try {
+                tg.sendData(JSON.stringify(data));
+                console.log('Данные отправлены');
+            } catch (e) {
+                console.error('Ошибка отправки данных:', e);
+                showError('Ошибка отправки данных');
+            }
+        }
+        
+        // Показ ошибки
+        function showError(message) {
+            const msgDiv = document.getElementById('click-message');
+            msgDiv.textContent = message;
+            msgDiv.style.color = '#ff4444';
+            setTimeout(() => {
+                msgDiv.textContent = '';
+            }, 2000);
+        }
+        
+        // Показ успеха
+        function showSuccess(message) {
+            const msgDiv = document.getElementById('click-message');
+            msgDiv.textContent = message;
+            msgDiv.style.color = '#4caf50';
+            setTimeout(() => {
+                msgDiv.textContent = '';
+            }, 1000);
         }
         
         // Обработка клика
-        function handleClick() {
+        function handleClick(event) {
+            console.log('Клик!');
             const btn = document.getElementById('click-btn');
-            if (btn.classList.contains('disabled')) return;
             
+            if (btn.classList.contains('disabled')) {
+                console.log('Кнопка заблокирована');
+                showError('Нет энергии!');
+                return;
+            }
+            
+            // Блокируем кнопку
             btn.classList.add('disabled');
+            btn.classList.add('clicked');
             
+            // Отправляем данные
             sendToBot({
                 action: 'click',
                 user_id: userId
             });
             
+            // Показываем эффект
+            showClickEffect(event);
+            
+            // Разблокируем через 300мс
             setTimeout(() => {
                 btn.classList.remove('disabled');
+                btn.classList.remove('clicked');
             }, 300);
+        }
+        
+        // Эффект клика
+        function showClickEffect(event) {
+            const btn = document.getElementById('click-btn');
+            const rect = btn.getBoundingClientRect();
+            
+            // Создаем плавающее число
+            const floatingNum = document.createElement('div');
+            floatingNum.className = 'floating-number';
+            floatingNum.textContent = '+1';
+            floatingNum.style.left = (rect.left + rect.width/2) + 'px';
+            floatingNum.style.top = (rect.top) + 'px';
+            document.body.appendChild(floatingNum);
+            
+            setTimeout(() => {
+                floatingNum.remove();
+            }, 1000);
+            
+            // Показываем сообщение
+            showSuccess('Клик отправлен!');
         }
         
         // Обновление статистики
         function updateStats(data) {
+            console.log('Обновление статистики:', data);
+            
+            // Обновляем значения
             document.getElementById('clicks').textContent = data.clicks;
             document.getElementById('energy').textContent = data.energy + '/' + data.max_energy;
             document.getElementById('level').textContent = data.level;
+            document.getElementById('click-power').textContent = data.level + 1;
             
+            // Обновляем энергобар
             const energyPercent = (data.energy / data.max_energy) * 100;
             document.getElementById('energy-bar').style.width = energyPercent + '%';
             
+            // Блокируем кнопку если нет энергии
+            const btn = document.getElementById('click-btn');
             if (data.energy <= 0) {
-                document.getElementById('click-btn').classList.add('disabled');
+                btn.classList.add('disabled');
             } else {
-                document.getElementById('click-btn').classList.remove('disabled');
+                btn.classList.remove('disabled');
+            }
+            
+            // Показываем сообщение о клике
+            if (data.message) {
+                showSuccess(data.message);
             }
         }
         
         // Показ уведомления о повышении уровня
         function showLevelUp() {
+            console.log('Level Up!');
             const msg = document.getElementById('level-up-message');
             msg.classList.remove('hidden');
             setTimeout(() => {
@@ -293,10 +445,13 @@
         
         // Показ топа игроков
         function showLeaderboard() {
+            console.log('Показ топа');
             document.getElementById('stats-section').classList.add('hidden');
             document.getElementById('clicker-section').classList.add('hidden');
             document.getElementById('menu-section').classList.add('hidden');
             document.getElementById('leaderboard-section').classList.remove('hidden');
+            
+            document.getElementById('leaderboard-list').innerHTML = '<div class="loading">Загрузка...</div>';
             
             sendToBot({
                 action: 'get_leaderboard',
@@ -306,6 +461,7 @@
         
         // Скрытие топа
         function hideLeaderboard() {
+            console.log('Скрытие топа');
             document.getElementById('stats-section').classList.remove('hidden');
             document.getElementById('clicker-section').classList.remove('hidden');
             document.getElementById('menu-section').classList.remove('hidden');
@@ -314,6 +470,7 @@
         
         // Обновление статистики
         function refreshStats() {
+            console.log('Запрос статистики');
             sendToBot({
                 action: 'get_stats',
                 user_id: userId
@@ -321,14 +478,11 @@
         }
         
         // Обработка данных от бота
-        window.addEventListener('message', function(event) {
-            // Для совместимости с Telegram WebApp
-        });
-        
-        // Перехватываем данные от бота
         tg.onEvent('webAppData', function(event) {
+            console.log('Получены данные от бота:', event);
             try {
                 const data = JSON.parse(event.data);
+                console.log('Распарсенные данные:', data);
                 
                 if (data.success) {
                     if (data.clicks !== undefined) {
@@ -341,35 +495,60 @@
                     
                     if (data.leaderboard) {
                         const list = document.getElementById('leaderboard-list');
-                        list.innerHTML = '';
-                        data.leaderboard.forEach(item => {
-                            const div = document.createElement('div');
-                            div.className = 'leaderboard-item';
-                            div.innerHTML = `
-                                <span>${item.rank}. ${item.name}</span>
-                                <strong>${item.clicks} 👆</strong>
-                            `;
-                            list.appendChild(div);
-                        });
+                        if (data.leaderboard.length === 0) {
+                            list.innerHTML = '<div class="loading">Топ пока пуст</div>';
+                        } else {
+                            list.innerHTML = '';
+                            data.leaderboard.forEach(item => {
+                                const div = document.createElement('div');
+                                div.className = 'leaderboard-item';
+                                
+                                let medal = '';
+                                if (item.rank === 1) medal = '🥇';
+                                else if (item.rank === 2) medal = '🥈';
+                                else if (item.rank === 3) medal = '🥉';
+                                else medal = '👤';
+                                
+                                div.innerHTML = `
+                                    <span>${medal} ${item.rank}. ${item.name}</span>
+                                    <strong>${item.clicks} 👆</strong>
+                                `;
+                                list.appendChild(div);
+                            });
+                        }
+                    }
+                    
+                    // Показываем сообщение если есть
+                    if (data.message) {
+                        showSuccess(data.message);
                     }
                 } else {
-                    tg.showAlert(data.message);
+                    showError(data.message || 'Ошибка');
                 }
             } catch (e) {
-                console.error('Error parsing data:', e);
+                console.error('Ошибка парсинга данных:', e);
+                showError('Ошибка получения данных');
             }
         });
         
-        // Запрашиваем статистику при загрузке
-        setTimeout(refreshStats, 500);
-        
-        // Автоматическое обновление каждые 30 секунд
-        setInterval(refreshStats, 30000);
-        
-        // Обработка закрытия
-        window.addEventListener('beforeunload', function() {
-            tg.close();
+        // Обработка ошибок
+        tg.onEvent('webAppClose', function() {
+            console.log('WebApp закрыт');
         });
+        
+        // Запрашиваем статистику при загрузке
+        setTimeout(() => {
+            console.log('Первоначальный запрос статистики');
+            refreshStats();
+        }, 1000);
+        
+        // Автоматическое обновление каждые 10 секунд
+        setInterval(refreshStats, 10000);
+        
+        // Обработка ошибок
+        window.onerror = function(msg, url, line, col, error) {
+            console.error('Ошибка:', msg, 'на строке', line);
+        };
     </script>
 </body>
 </html>
