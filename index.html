@@ -24,7 +24,6 @@
             justify-content: center;
             align-items: center;
             padding: 16px;
-            margin: 0;
         }
         
         .container {
@@ -101,12 +100,6 @@
             transform: scale(0.95);
         }
         
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        
         .click-button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
@@ -129,52 +122,11 @@
             transition: width 0.3s ease;
         }
         
-        .message {
-            text-align: center;
-            padding: 12px;
-            border-radius: 8px;
-            margin: 16px 0;
-            display: none;
-        }
-        
-        .message.success {
-            background: #4cd964;
-            color: white;
-            display: block;
-        }
-        
-        .message.error {
-            background: #ff3b30;
-            color: white;
-            display: block;
-        }
-        
         .footer {
             text-align: center;
             margin-top: 20px;
             color: #666;
             font-size: 12px;
-        }
-        
-        .refresh-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 16px;
-            width: 100%;
-        }
-        
-        .refresh-btn:hover {
-            background: #5a6fd8;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #667eea;
         }
     </style>
 </head>
@@ -185,56 +137,42 @@
             КЛИКЕР
         </h1>
         
-        <div id="loading" class="loading">Загрузка...</div>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">💰 Баланс</div>
+                <div class="stat-value" id="balance">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">💪 Сила</div>
+                <div class="stat-value" id="power">2</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">📊 Уровень</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">👆 Всего</div>
+                <div class="stat-value" id="total">0</div>
+            </div>
+        </div>
         
-        <div id="content" style="display: none;">
-            <!-- Статистика -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">💰 Баланс</div>
-                    <div class="stat-value" id="balance">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">💪 Сила</div>
-                    <div class="stat-value" id="power">1</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">📊 Уровень</div>
-                    <div class="stat-value" id="level">1</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">👆 Всего</div>
-                    <div class="stat-value" id="total">0</div>
-                </div>
+        <div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span>⚡ Энергия</span>
+                <span id="energy-text">100/100</span>
             </div>
-            
-            <!-- Энергия -->
-            <div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span>⚡ Энергия</span>
-                    <span id="energy-text">100/100</span>
-                </div>
-                <div class="energy-bar">
-                    <div class="energy-fill" id="energy-bar" style="width: 100%"></div>
-                </div>
+            <div class="energy-bar">
+                <div class="energy-fill" id="energy-bar" style="width: 100%"></div>
             </div>
-            
-            <!-- Кнопка кликера -->
-            <button class="click-button" id="clickBtn" onclick="handleClick()">
-                👆
-            </button>
-            
-            <!-- Сообщения -->
-            <div class="message" id="message"></div>
-            
-            <!-- Кнопка обновления -->
-            <button class="refresh-btn" onclick="loadUserData()">
-                🔄 Обновить данные
-            </button>
-            
-            <div class="footer">
-                Кликай и зарабатывай токены!
-            </div>
+        </div>
+        
+        <!-- Кнопка кликера -->
+        <button class="click-button" id="clickBtn" onclick="handleClick()">
+            👆
+        </button>
+        
+        <div class="footer">
+            Кликай и зарабатывай токены!
         </div>
     </div>
 
@@ -247,13 +185,8 @@
         // Получаем данные пользователя
         const user = tg.initDataUnsafe?.user;
         const userId = user?.id || 840662;
-        const username = user?.username || 'mas1sa';
-        const firstName = user?.first_name || 'Игрок';
         
-        // ID бота и токен
-        const BOT_TOKEN = '8643885409:AAGVzbvhunAiOTInU3xP7F6ZwgGKnlEPmHY';
-        
-        // Переменные для данных
+        // Данные пользователя
         let userData = {
             clicks: 0,
             energy: 100,
@@ -265,125 +198,54 @@
         
         let energyTimer;
         
-        // Загрузка данных из бота
-        async function loadUserData() {
-            showLoading(true);
-            
-            try {
-                // Запрашиваем статистику у бота
-                const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUserStats`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        user_id: userId
-                    })
-                });
-                
-                // Так как у нас нет прямого API, используем данные с экрана
-                // Парсим данные из скриншота
-                userData.clicks = 0;
-                userData.energy = 100;
-                userData.max_energy = 100;
-                userData.level = 1;
-                userData.click_power = 2;
-                userData.total_clicks = 0;
-                
-                updateUI();
-                
-            } catch (error) {
-                console.error('Ошибка загрузки:', error);
-                // Используем данные по умолчанию
-                userData.click_power = 2;
-                updateUI();
+        // Загрузка данных
+        function loadUserData() {
+            const saved = localStorage.getItem(`user_${userId}`);
+            if (saved) {
+                userData = JSON.parse(saved);
             }
-            
-            showLoading(false);
+            updateUI();
         }
         
-        // Отправка клика в бота
-        async function sendClickToBot() {
-            try {
-                // Отправляем команду /click боту
-                const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        chat_id: userId,
-                        text: '/click'
-                    })
-                });
-                
-                const result = await response.json();
-                return result.ok;
-                
-            } catch (error) {
-                console.error('Ошибка отправки клика:', error);
-                
-                // Если не получается отправить, обновляем локально
-                return new Promise((resolve) => {
-                    tg.sendData(JSON.stringify({
-                        action: 'click',
-                        user_id: userId
-                    }));
-                    resolve(true);
-                });
-            }
-        }
-        
-        // Обработка клика
-        async function handleClick() {
+        // Обработка клика - БЕЗ ОТПРАВКИ СООБЩЕНИЙ В ЧАТ
+        function handleClick() {
             if (userData.energy < userData.click_power) {
-                showMessage('❌ Недостаточно энергии!', 'error');
+                // Вибрируем, но не пишем сообщение
+                tg.HapticFeedback.impactOccurred('light');
                 return;
             }
             
-            // Блокируем кнопку на время отправки
-            const btn = document.getElementById('clickBtn');
-            btn.disabled = true;
+            // Обновляем данные
+            userData.clicks += userData.click_power;
+            userData.energy -= userData.click_power;
+            userData.total_clicks += userData.click_power;
             
-            // Отправляем клик в бота
-            const success = await sendClickToBot();
-            
-            if (success) {
-                // Обновляем локальные данные
-                userData.clicks += userData.click_power;
-                userData.energy -= userData.click_power;
-                userData.total_clicks += userData.click_power;
-                
-                // Проверяем уровень
-                if (userData.total_clicks >= userData.level * 100) {
-                    userData.level++;
-                    userData.click_power++;
-                    userData.max_energy += 20;
-                    showMessage('🎉 УРОВЕНЬ ПОВЫШЕН!', 'success');
-                }
-                
-                updateUI();
-                showMessage('✅ +' + userData.click_power + ' токен!', 'success');
-                
-                // Отправляем данные в Telegram
-                tg.sendData(JSON.stringify({
-                    action: 'update',
-                    user_id: userId,
-                    clicks: userData.clicks,
-                    energy: userData.energy,
-                    level: userData.level
-                }));
-                
-            } else {
-                showMessage('❌ Ошибка отправки', 'error');
+            // Проверяем уровень
+            if (userData.total_clicks >= userData.level * 100) {
+                userData.level++;
+                userData.click_power++;
+                userData.max_energy += 20;
+                // Легкая вибрация при повышении уровня
+                tg.HapticFeedback.notificationOccurred('success');
             }
             
-            // Разблокируем кнопку
-            setTimeout(() => {
-                btn.disabled = false;
-            }, 500);
+            // Обновляем интерфейс
+            updateUI();
             
-            setTimeout(() => hideMessage(), 1500);
+            // Сохраняем локально
+            localStorage.setItem(`user_${userId}`, JSON.stringify(userData));
+            
+            // Отправляем данные в бота через WebAppData (НЕ через сообщение!)
+            tg.sendData(JSON.stringify({
+                action: 'click',
+                user_id: userId,
+                clicks: userData.clicks,
+                energy: userData.energy,
+                level: userData.level
+            }));
+            
+            // Легкая вибрация при клике
+            tg.HapticFeedback.impactOccurred('medium');
         }
         
         // Восстановление энергии
@@ -391,6 +253,7 @@
             if (userData.energy < userData.max_energy) {
                 userData.energy = Math.min(userData.energy + 1, userData.max_energy);
                 updateUI();
+                localStorage.setItem(`user_${userId}`, JSON.stringify(userData));
             }
         }
         
@@ -408,35 +271,12 @@
             document.getElementById('clickBtn').disabled = userData.energy < userData.click_power;
         }
         
-        function showMessage(text, type) {
-            const msg = document.getElementById('message');
-            msg.textContent = text;
-            msg.className = 'message ' + type;
-        }
-        
-        function hideMessage() {
-            document.getElementById('message').className = 'message';
-        }
-        
-        function showLoading(show) {
-            document.getElementById('loading').style.display = show ? 'block' : 'none';
-            document.getElementById('content').style.display = show ? 'none' : 'block';
-        }
-        
         // Инициализация
         loadUserData();
-        
-        // Запускаем восстановление энергии
         energyTimer = setInterval(restoreEnergy, 3000);
         
-        // Обработка закрытия
-        tg.onEvent('mainButtonClicked', function() {
-            tg.close();
-        });
-        
-        // Экспорт функций
+        // Экспорт функции
         window.handleClick = handleClick;
-        window.loadUserData = loadUserData;
     </script>
 </body>
 </html>
