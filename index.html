@@ -1,232 +1,402 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Кликер</title>
+    <title>🚀 Кликер Бот</title>
+    
+    <!-- Telegram Web App библиотека -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--tg-theme-bg-color, #f0f2f5);
-            color: var(--tg-theme-text-color, #000);
+        * {
             margin: 0;
-            padding: 20px;
-            text-align: center;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            margin: 0;
         }
         
         .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 24px;
             max-width: 400px;
-            margin: 0 auto;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
         
         h1 {
-            color: var(--tg-theme-button-color, #40a7e3);
-        }
-        
-        .stats {
-            background: var(--tg-theme-secondary-bg-color, #fff);
-            border-radius: 16px;
-            padding: 20px;
-            margin: 20px 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .stat-row {
-            display: flex;
-            justify-content: space-between;
-            margin: 10px 0;
-            font-size: 18px;
-        }
-        
-        .stat-value {
-            font-weight: bold;
-            color: var(--tg-theme-button-color, #40a7e3);
-        }
-        
-        .click-button {
-            width: 250px;
-            height: 250px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #ff4757, #ff0000);
-            border: none;
-            color: white;
+            text-align: center;
+            color: #333;
+            margin-bottom: 24px;
             font-size: 32px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 10px 20px rgba(255,0,0,0.3);
-            margin: 30px auto;
-            transition: transform 0.1s;
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 8px;
+        }
+        
+        h1 span {
+            font-size: 40px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .click-button {
+            width: 200px;
+            height: 200px;
+            border-radius: 100px;
+            background: linear-gradient(145deg, #ff6b6b, #ff8e8e);
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+            border: none;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: pulse 2s infinite;
+            margin: 20px auto;
+            display: block;
+        }
+        
+        .click-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
         }
         
         .click-button:active {
             transform: scale(0.95);
         }
         
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .click-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            animation: none;
+        }
+        
+        .energy-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .energy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4cd964, #5ac8fa);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            width: 100%;
+        }
+        
         .message {
-            min-height: 30px;
-            margin: 10px;
-            font-weight: bold;
-        }
-        
-        .success {
-            color: #4caf50;
-        }
-        
-        .error {
-            color: #f44336;
-        }
-        
-        .user-info {
-            background: var(--tg-theme-secondary-bg-color, #fff);
+            text-align: center;
+            padding: 12px;
             border-radius: 8px;
-            padding: 10px;
-            margin: 10px 0;
-            font-size: 14px;
-            color: var(--tg-theme-hint-color, #999);
+            margin: 16px 0;
+            display: none;
+        }
+        
+        .message.success {
+            background: #4cd964;
+            color: white;
+            display: block;
+        }
+        
+        .message.error {
+            background: #ff3b30;
+            color: white;
+            display: block;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 16px;
+            width: 100%;
+        }
+        
+        .refresh-btn:hover {
+            background: #5a6fd8;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🚀 КЛИКЕР</h1>
+        <h1>
+            <span>🚀</span>
+            КЛИКЕР
+        </h1>
         
-        <div class="user-info" id="userInfo">
-            Загрузка...
+        <!-- Статистика -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">💰 Баланс</div>
+                <div class="stat-value" id="balance">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">💪 Сила</div>
+                <div class="stat-value" id="power">1</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">📊 Уровень</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">👆 Всего</div>
+                <div class="stat-value" id="total">0</div>
+            </div>
         </div>
         
-        <div class="stats">
-            <div class="stat-row">
-                <span>👆 Клики:</span>
-                <span class="stat-value" id="clicks">0</span>
+        <!-- Энергия -->
+        <div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span>⚡ Энергия</span>
+                <span id="energy-text">100/100</span>
             </div>
-            <div class="stat-row">
-                <span>⚡ Энергия:</span>
-                <span class="stat-value" id="energy">100/100</span>
-            </div>
-            <div class="stat-row">
-                <span>📊 Уровень:</span>
-                <span class="stat-value" id="level">1</span>
-            </div>
-            <div class="stat-row">
-                <span>💪 Сила:</span>
-                <span class="stat-value" id="power">2</span>
+            <div class="energy-bar">
+                <div class="energy-fill" id="energy-bar" style="width: 100%"></div>
             </div>
         </div>
         
+        <!-- Кнопка кликера -->
         <button class="click-button" id="clickBtn" onclick="handleClick()">
-            КЛИК
+            👆
         </button>
         
+        <!-- Сообщения -->
         <div class="message" id="message"></div>
+        
+        <!-- Кнопка обновления -->
+        <button class="refresh-btn" onclick="loadUserData()">
+            🔄 Обновить данные
+        </button>
+        
+        <div class="footer">
+            Кликай и зарабатывай токены!
+        </div>
     </div>
 
     <script>
-        // Инициализация Telegram WebApp
+        // Инициализация Telegram Web App
         const tg = window.Telegram.WebApp;
-        
-        // Показываем что WebApp готов
-        tg.ready();
-        tg.expand();
+        tg.expand(); // Разворачиваем на весь экран
+        tg.ready(); // Сообщаем, что приложение готово
         
         // Получаем данные пользователя из Telegram
-        const initData = tg.initDataUnsafe;
-        const user = initData.user;
+        const user = tg.initDataUnsafe?.user;
+        const userId = user?.id || 1;
+        const username = user?.username || 'user';
+        const firstName = user?.first_name || 'Игрок';
         
-        console.log('=== ДАННЫЕ ПОЛЬЗОВАТЕЛЯ ===');
-        console.log('initData:', initData);
-        console.log('user:', user);
+        // URL для API (замените на ваш сервер, когда будете деплоить)
+        const API_URL = 'https://your-server.com'; // ПОКА НЕ ИСПОЛЬЗУЕМ
         
-        // Показываем информацию о пользователе
-        const userInfo = document.getElementById('userInfo');
-        if (user) {
-            userInfo.innerHTML = `
-                ✅ ID: ${user.id}<br>
-                Имя: ${user.first_name}<br>
-                Юзернейм: ${user.username || 'нет'}<br>
-                Platform: ${tg.platform}
-            `;
-        } else {
-            userInfo.innerHTML = '❌ Нет данных пользователя!';
-            userInfo.style.color = 'red';
+        // Переменные для хранения данных
+        let userData = {
+            clicks: 0,
+            energy: 100,
+            max_energy: 100,
+            level: 1,
+            click_power: 1,
+            total_clicks: 0
+        };
+        
+        // Таймер для восстановления энергии
+        let energyTimer;
+        
+        // Загрузка данных пользователя
+        function loadUserData() {
+            // Временно используем localStorage для теста
+            const saved = localStorage.getItem(`user_${userId}`);
+            if (saved) {
+                userData = JSON.parse(saved);
+            } else {
+                // Данные по умолчанию
+                userData = {
+                    clicks: 0,
+                    energy: 100,
+                    max_energy: 100,
+                    level: 1,
+                    click_power: 1,
+                    total_clicks: 0
+                };
+            }
+            updateUI();
         }
         
-        let clicks = 0;
+        // Сохранение данных
+        function saveUserData() {
+            localStorage.setItem(`user_${userId}`, JSON.stringify(userData));
+            // Отправляем данные в бот (опционально)
+            tg.sendData(JSON.stringify({
+                action: 'save',
+                userId: userId,
+                data: userData
+            }));
+        }
         
+        // Обновление интерфейса
+        function updateUI() {
+            document.getElementById('balance').textContent = userData.clicks;
+            document.getElementById('power').textContent = userData.click_power;
+            document.getElementById('level').textContent = userData.level;
+            document.getElementById('total').textContent = userData.total_clicks;
+            
+            const energyPercent = (userData.energy / userData.max_energy) * 100;
+            document.getElementById('energy-bar').style.width = energyPercent + '%';
+            document.getElementById('energy-text').textContent = `${userData.energy}/${userData.max_energy}`;
+            
+            // Блокируем кнопку если нет энергии
+            document.getElementById('clickBtn').disabled = userData.energy < userData.click_power;
+        }
+        
+        // Обработка клика
+        function handleClick() {
+            if (userData.energy < userData.click_power) {
+                showMessage('❌ Недостаточно энергии!', 'error');
+                return;
+            }
+            
+            // Увеличиваем клики
+            userData.clicks += userData.click_power;
+            userData.energy -= userData.click_power;
+            userData.total_clicks += userData.click_power;
+            
+            // Проверяем повышение уровня
+            if (userData.total_clicks >= userData.level * 100) {
+                userData.level++;
+                userData.click_power++;
+                userData.max_energy += 20;
+                showMessage('🎉 УРОВЕНЬ ПОВЫШЕН!', 'success');
+            }
+            
+            // Обновляем интерфейс
+            updateUI();
+            
+            // Сохраняем данные
+            saveUserData();
+            
+            // Анимация
+            showMessage('✅ +' + userData.click_power + ' токен!', 'success');
+            setTimeout(() => hideMessage(), 1000);
+        }
+        
+        // Восстановление энергии
+        function restoreEnergy() {
+            if (userData.energy < userData.max_energy) {
+                userData.energy = Math.min(userData.energy + 1, userData.max_energy);
+                updateUI();
+                saveUserData();
+            }
+        }
+        
+        // Показ сообщения
         function showMessage(text, type) {
             const msg = document.getElementById('message');
             msg.textContent = text;
             msg.className = 'message ' + type;
-            setTimeout(() => {
-                if (msg.textContent === text) {
-                    msg.textContent = '';
-                    msg.className = 'message';
-                }
-            }, 2000);
         }
         
-        function handleClick() {
-            console.log('🖱️ Клик!');
-            
-            // Проверяем, есть ли пользователь
-            if (!user) {
-                showMessage('Ошибка: нет данных пользователя', 'error');
-                return;
-            }
-            
-            const btn = document.getElementById('clickBtn');
-            btn.style.transform = 'scale(0.9)';
-            
-            // Отправляем данные в бот
-            const data = {
-                action: 'click'
-                // НЕ НУЖНО отправлять user_id - бот сам знает, кто отправил
-            };
-            
-            console.log('📤 Отправка:', data);
-            tg.sendData(JSON.stringify(data));
-            
-            setTimeout(() => {
-                btn.style.transform = 'scale(1)';
-            }, 100);
+        // Скрыть сообщение
+        function hideMessage() {
+            document.getElementById('message').className = 'message';
         }
         
-        // Получаем ответ от бота
-        tg.onEvent('webAppData', function(event) {
-            console.log('📥 Получен ответ:', event);
+        // Отправка статистики в бот
+        function sendStats() {
+            // Временно просто показываем статистику
+            const stats = `📊 Твоя статистика:
+            💰 Баланс: ${userData.clicks}
+            ⚡ Энергия: ${userData.energy}/${userData.max_energy}
+            📈 Уровень: ${userData.level}
+            💪 Сила: ${userData.click_power}
+            👆 Всего: ${userData.total_clicks}`;
             
-            try {
-                const data = JSON.parse(event.data);
-                console.log('Данные:', data);
-                
-                if (data.success) {
-                    clicks = data.clicks;
-                    document.getElementById('clicks').textContent = clicks;
-                    showMessage('✓ Клик засчитан!', 'success');
-                } else {
-                    showMessage('Ошибка: ' + (data.error || 'неизвестная ошибка'), 'error');
-                }
-            } catch(e) {
-                console.error('Ошибка парсинга:', e);
-            }
+            // Отправляем в Telegram бот (опционально)
+            tg.sendData(JSON.stringify({
+                action: 'stats',
+                userId: userId,
+                stats: userData
+            }));
+            
+            alert(stats); // Для теста
+        }
+        
+        // Загружаем данные при старте
+        loadUserData();
+        
+        // Запускаем таймер восстановления энергии (каждые 3 секунды)
+        energyTimer = setInterval(restoreEnergy, 3000);
+        
+        // Обработка закрытия приложения
+        tg.onEvent('mainButtonClicked', function() {
+            tg.close();
         });
         
-        // Периодически запрашиваем статистику
-        function refreshStats() {
-            if (!user) return;
-            
-            tg.sendData(JSON.stringify({
-                action: 'get_stats'
-            }));
-        }
+        // Показываем приветствие
+        console.log(`Добро пожаловать, ${firstName}!`);
         
-        // Запрашиваем статистику при загрузке
-        setTimeout(refreshStats, 1000);
-        
-        console.log('=== ГОТОВО ===');
+        // Экспортируем функции для глобального доступа
+        window.handleClick = handleClick;
+        window.loadUserData = loadUserData;
+        window.sendStats = sendStats;
     </script>
 </body>
 </html>
