@@ -3,121 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Простой Mini App</title>
+    <title>Mini App с картинкой</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        /* Сброс отступов */
+        * {
             margin: 0;
-            padding: 20px;
-            background-color: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
+            padding: 0;
+            box-sizing: border-box;
         }
-        .container {
-            max-width: 400px;
-            margin: 0 auto;
+
+        /* На весь экран */
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* Убираем скролл */
+        }
+
+        /* Контейнер на весь экран */
+        .fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Затемнение для лучшей видимости текста */
+        .overlay {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            border-radius: 20px;
             text-align: center;
+            color: white;
+            backdrop-filter: blur(5px);
+            max-width: 80%;
         }
+
+        /* Стили для текста */
         h1 {
-            color: var(--tg-theme-button-color, #40a7e3);
+            font-size: 32px;
+            margin-bottom: 15px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
-        button {
-            background-color: var(--tg-theme-button-color, #40a7e3);
-            color: var(--tg-theme-button-text-color, #ffffff);
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            margin: 10px;
-            transition: opacity 0.3s;
-        }
-        button:hover {
+
+        p {
+            font-size: 18px;
+            margin-bottom: 25px;
             opacity: 0.9;
         }
-        .card {
-            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
+
+        /* Кнопка */
+        button {
+            background: white;
+            color: black;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        /* Информация о пользователе */
         .user-info {
-            text-align: left;
             margin-top: 20px;
-        }
-        .user-info p {
-            margin: 5px 0;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>👋 Добро пожаловать в Mini App!</h1>
-        
-        <div class="card">
-            <h2>Информация о пользователе</h2>
+    <div class="fullscreen">
+        <div class="overlay">
+            <h1>👋 Добро пожаловать!</h1>
+            <p>Наслаждайтесь видом</p>
+            
+            <button onclick="sendHello()">
+                👆 Нажми меня
+            </button>
+
             <div class="user-info" id="userInfo">
-                <p>Загрузка...</p>
+                Загрузка...
             </div>
         </div>
-
-        <button onclick="showAlert()">Показать уведомление</button>
-        <button onclick="sendData()">Отправить данные боту</button>
-        <button onclick="closeApp()">Закрыть приложение</button>
     </div>
 
     <script>
         // Инициализация Telegram Web App
         const tg = window.Telegram.WebApp;
         
-        // Расширяем на весь экран
+        // На весь экран
         tg.expand();
 
         // Получаем данные пользователя
         const user = tg.initDataUnsafe?.user;
         
+        // Показываем информацию о пользователе
         if (user) {
             document.getElementById('userInfo').innerHTML = `
-                <p><strong>ID:</strong> ${user.id}</p>
-                <p><strong>Имя:</strong> ${user.first_name} ${user.last_name || ''}</p>
-                <p><strong>Username:</strong> ${user.username || 'не указан'}</p>
-                <p><strong>Язык:</strong> ${user.language_code || 'ru'}</p>
+                Привет, ${user.first_name}! ${user.username ? '@' + user.username : ''}
             `;
+        } else {
+            document.getElementById('userInfo').innerHTML = 'Добро пожаловать!';
         }
 
-        // Функция показа уведомления
-        function showAlert() {
-            tg.showAlert('Это уведомление из Mini App!');
-        }
-
-        // Функция отправки данных боту
-        function sendData() {
-            const data = {
-                action: 'button_click',
-                timestamp: new Date().toISOString(),
-                user_id: user?.id
-            };
+        // Функция для кнопки
+        function sendHello() {
+            tg.showAlert('👋 Привет! Красивая картинка, правда?');
             
-            tg.sendData(JSON.stringify(data));
-            tg.showAlert('Данные отправлены боту!');
+            // Отправляем данные боту (если нужно)
+            tg.sendData(JSON.stringify({
+                action: 'button_click',
+                message: 'Пользователь нажал кнопку'
+            }));
         }
 
-        // Функция закрытия приложения
-        function closeApp() {
-            tg.close();
-        }
-
-        // Обработка закрытия приложения
-        tg.onEvent('mainButtonClicked', function() {
-            tg.sendData('Main button clicked');
-        });
-
-        // Настройка основной кнопки
-        tg.MainButton.setText('Отправить данные');
-        tg.MainButton.onClick(sendData);
-        tg.MainButton.show();
-
-        console.log('Mini App готов к работе!');
+        // Говорим, что приложение готово
+        tg.ready();
     </script>
 </body>
 </html>
