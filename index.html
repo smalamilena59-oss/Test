@@ -3,280 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚀 Кликер Бот</title>
-    
-    <!-- Telegram Web App библиотека -->
+    <title>Простой Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-        }
-        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
         }
-        
         .container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 30px;
-            padding: 24px;
             max-width: 400px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin: 0 auto;
+            text-align: center;
         }
-        
         h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 24px;
-            font-size: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            color: var(--tg-theme-button-color, #40a7e3);
         }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        
-        .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 16px;
-            border-radius: 16px;
-            text-align: center;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-        }
-        
-        .stat-label {
-            font-size: 14px;
-            opacity: 0.9;
-            margin-bottom: 4px;
-        }
-        
-        .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-        }
-        
-        .click-button {
-            width: 200px;
-            height: 200px;
-            border-radius: 100px;
-            background: linear-gradient(145deg, #ff6b6b, #ff8e8e);
-            color: white;
-            font-size: 48px;
-            font-weight: bold;
+        button {
+            background-color: var(--tg-theme-button-color, #40a7e3);
+            color: var(--tg-theme-button-text-color, #ffffff);
             border: none;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            animation: pulse 2s infinite;
-            margin: 20px auto;
-            display: block;
+            margin: 10px;
+            transition: opacity 0.3s;
         }
-        
-        .click-button:hover {
-            transform: scale(1.1);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        button:hover {
+            opacity: 0.9;
         }
-        
-        .click-button:active {
-            transform: scale(0.95);
-        }
-        
-        .click-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            animation: none;
-        }
-        
-        .energy-bar {
-            width: 100%;
-            height: 20px;
-            background: #e0e0e0;
+        .card {
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
             border-radius: 10px;
+            padding: 20px;
             margin: 20px 0;
-            overflow: hidden;
         }
-        
-        .energy-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #4cd964, #5ac8fa);
-            border-radius: 10px;
-            transition: width 0.3s ease;
-        }
-        
-        .footer {
-            text-align: center;
+        .user-info {
+            text-align: left;
             margin-top: 20px;
-            color: #666;
-            font-size: 12px;
+        }
+        .user-info p {
+            margin: 5px 0;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>
-            <span>🚀</span>
-            КЛИКЕР
-        </h1>
+        <h1>👋 Добро пожаловать в Mini App!</h1>
         
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">💰 Баланс</div>
-                <div class="stat-value" id="balance">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">💪 Сила</div>
-                <div class="stat-value" id="power">2</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">📊 Уровень</div>
-                <div class="stat-value" id="level">1</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">👆 Всего</div>
-                <div class="stat-value" id="total">0</div>
+        <div class="card">
+            <h2>Информация о пользователе</h2>
+            <div class="user-info" id="userInfo">
+                <p>Загрузка...</p>
             </div>
         </div>
-        
-        <div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                <span>⚡ Энергия</span>
-                <span id="energy-text">100/100</span>
-            </div>
-            <div class="energy-bar">
-                <div class="energy-fill" id="energy-bar" style="width: 100%"></div>
-            </div>
-        </div>
-        
-        <!-- Кнопка кликера -->
-        <button class="click-button" id="clickBtn" onclick="handleClick()">
-            👆
-        </button>
-        
-        <div class="footer">
-            Кликай и зарабатывай токены!
-        </div>
+
+        <button onclick="showAlert()">Показать уведомление</button>
+        <button onclick="sendData()">Отправить данные боту</button>
+        <button onclick="closeApp()">Закрыть приложение</button>
     </div>
 
     <script>
         // Инициализация Telegram Web App
         const tg = window.Telegram.WebApp;
-        tg.expand();
-        tg.ready();
         
+        // Расширяем на весь экран
+        tg.expand();
+
         // Получаем данные пользователя
         const user = tg.initDataUnsafe?.user;
-        const userId = user?.id || 840662;
         
-        // Данные пользователя
-        let userData = {
-            clicks: 0,
-            energy: 100,
-            max_energy: 100,
-            level: 1,
-            click_power: 2,
-            total_clicks: 0
-        };
-        
-        let energyTimer;
-        
-        // Загрузка данных
-        function loadUserData() {
-            const saved = localStorage.getItem(`user_${userId}`);
-            if (saved) {
-                userData = JSON.parse(saved);
-            }
-            updateUI();
+        if (user) {
+            document.getElementById('userInfo').innerHTML = `
+                <p><strong>ID:</strong> ${user.id}</p>
+                <p><strong>Имя:</strong> ${user.first_name} ${user.last_name || ''}</p>
+                <p><strong>Username:</strong> ${user.username || 'не указан'}</p>
+                <p><strong>Язык:</strong> ${user.language_code || 'ru'}</p>
+            `;
         }
-        
-        // Обработка клика - БЕЗ ОТПРАВКИ СООБЩЕНИЙ В ЧАТ
-        function handleClick() {
-            if (userData.energy < userData.click_power) {
-                // Вибрируем, но не пишем сообщение
-                tg.HapticFeedback.impactOccurred('light');
-                return;
-            }
-            
-            // Обновляем данные
-            userData.clicks += userData.click_power;
-            userData.energy -= userData.click_power;
-            userData.total_clicks += userData.click_power;
-            
-            // Проверяем уровень
-            if (userData.total_clicks >= userData.level * 100) {
-                userData.level++;
-                userData.click_power++;
-                userData.max_energy += 20;
-                // Легкая вибрация при повышении уровня
-                tg.HapticFeedback.notificationOccurred('success');
-            }
-            
-            // Обновляем интерфейс
-            updateUI();
-            
-            // Сохраняем локально
-            localStorage.setItem(`user_${userId}`, JSON.stringify(userData));
-            
-            // Отправляем данные в бота через WebAppData (НЕ через сообщение!)
-            tg.sendData(JSON.stringify({
-                action: 'click',
-                user_id: userId,
-                clicks: userData.clicks,
-                energy: userData.energy,
-                level: userData.level
-            }));
-            
-            // Легкая вибрация при клике
-            tg.HapticFeedback.impactOccurred('medium');
+
+        // Функция показа уведомления
+        function showAlert() {
+            tg.showAlert('Это уведомление из Mini App!');
         }
-        
-        // Восстановление энергии
-        function restoreEnergy() {
-            if (userData.energy < userData.max_energy) {
-                userData.energy = Math.min(userData.energy + 1, userData.max_energy);
-                updateUI();
-                localStorage.setItem(`user_${userId}`, JSON.stringify(userData));
-            }
-        }
-        
-        // Обновление интерфейса
-        function updateUI() {
-            document.getElementById('balance').textContent = userData.clicks;
-            document.getElementById('power').textContent = userData.click_power;
-            document.getElementById('level').textContent = userData.level;
-            document.getElementById('total').textContent = userData.total_clicks;
+
+        // Функция отправки данных боту
+        function sendData() {
+            const data = {
+                action: 'button_click',
+                timestamp: new Date().toISOString(),
+                user_id: user?.id
+            };
             
-            const energyPercent = (userData.energy / userData.max_energy) * 100;
-            document.getElementById('energy-bar').style.width = energyPercent + '%';
-            document.getElementById('energy-text').textContent = `${userData.energy}/${userData.max_energy}`;
-            
-            document.getElementById('clickBtn').disabled = userData.energy < userData.click_power;
+            tg.sendData(JSON.stringify(data));
+            tg.showAlert('Данные отправлены боту!');
         }
-        
-        // Инициализация
-        loadUserData();
-        energyTimer = setInterval(restoreEnergy, 3000);
-        
-        // Экспорт функции
-        window.handleClick = handleClick;
+
+        // Функция закрытия приложения
+        function closeApp() {
+            tg.close();
+        }
+
+        // Обработка закрытия приложения
+        tg.onEvent('mainButtonClicked', function() {
+            tg.sendData('Main button clicked');
+        });
+
+        // Настройка основной кнопки
+        tg.MainButton.setText('Отправить данные');
+        tg.MainButton.onClick(sendData);
+        tg.MainButton.show();
+
+        console.log('Mini App готов к работе!');
     </script>
 </body>
 </html>
